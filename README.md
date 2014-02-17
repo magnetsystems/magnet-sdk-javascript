@@ -111,14 +111,14 @@ iOS Simulator -> Debug -> Location -> Custom Location
 
 #### Limited Set Of Features
 
-While the SDK is compatible with Node.js, several SDK features not applicable. Refer to the Feature Comparison chart in Chapter 3 of the Magnet Mobile Server SDK for JavaScript Developer Guide to determine which features are supported.
+While the SDK is compatible with Node.js, several SDK features not applicable. Refer to the Feature Comparison chart in  the Magnet Mobile Server SDK for JavaScript Developer Guide to determine which features are supported.
 
 
 ### Web
 
 #### Limited Set Of Features
 
-While the SDK is compatible with web applications, several SDK features are either not applicable, or not supported on a majority of the modern web browsers. Refer to the Feature Comparison chart in Chapter 3 of the Magnet Mobile Server SDK for JavaScript Developer Guide to determine which features are supported.
+While the SDK is compatible with web applications, several SDK features are either not applicable, or not supported on a majority of the modern web browsers. Refer to the Feature Comparison chart in the Magnet Mobile Server SDK for JavaScript Developer Guide to determine which features are supported.
 
 #### Lack Of Support For Cross-Domain AJAX Requests
 
