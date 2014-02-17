@@ -4,7 +4,7 @@ The Magnet Mobile App Server SDK for JavaScript is a framework that simplifies u
 and facilitates backup and restore of Magnet application-specific data. The SDK enables you to focus on the design and user experience of mobile apps rather than spending time building complex frameworks and infrastructure. Built with portability in mind, the SDK is supported across a variety of clients: hybrid mobile apps with Phonegap, server side JavaScript with Node.js, and web/mobile web applications.
 
 The SDK also handles the intricacies of communicating with controllers and resource nodes exposed by the server through the use of conventional JavaScript APIs. This is accomplished by importing custom API libraries generated
-using with Magnet Mobile App Builder into the SDK. These libraries provide aninterface for communicating with the server, and can be extended to utilize valuable mobile capabilities such as reliable calls, response/response caching, and enforcement of constraints based on network/location.
+using with Magnet Mobile App Builder into the SDK. These libraries provide an interface for communicating with the server, and can be extended to utilize valuable mobile capabilities such as reliable calls, response/response caching, and enforcement of constraints based on network/location.
 
 More information is available at [Magnet Developer Factory](http://magnet.com/factory/).
 
