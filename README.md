@@ -8,7 +8,7 @@ using with Magnet Mobile App Builder into the SDK. These libraries provide an in
 
 More information is available at [Magnet Developer Factory](http://magnet.com/factory/).
 
-The SDK is licensed under the terms of the [Magnet Software License Agreement](http://www.magnet.com/resources/tos.html).  Please see [LICENSE](./LICENSE) file for full details.
+The SDK is licensed under the terms of the [Magnet Software License Agreement](http://www.magnet.com/resources/tos.html).  Please see [LICENSE](https://github.com/magnetsystems/magnet-sdk-javascript/blob/master/LICENSE) file for full details.
 
 ### Import the SDK into your own Phonegap or Web app
 
