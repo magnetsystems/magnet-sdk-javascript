@@ -2,7 +2,7 @@
  * @fileoverview Magnet Javascript SDK
  * {@link https://factory.magnet.com/docs/javascript-sdk/ Magnet Javascript SDK}
  *
- * @version 2.2.0
+ * @version 2.2.1
  */
 
 (function(MagnetJS){
@@ -278,6 +278,8 @@ MagnetJS.Utils = {
                     obj.reason = 'not boolean';
                 }else if(attributes[attr] && (type == 'java.util.List' ||  type == 'array') && (!attributes[attr] || attributes[attr].length == 0 || this.isArray(attributes[attr]) === false)){
                     obj.reason = 'empty list';
+                }else if(attributes[attr] && (type == '_data' || type == 'binary') && (!attributes[attr].mimeType || !attributes[attr].val)){
+                    obj.reason = 'invalid binary format';
                 }
                 if(obj.reason) invalid.push(obj);
             }
@@ -361,13 +363,20 @@ MagnetJS.Utils = {
         return new Date(ms);
     },
     /**
-     * Create a base64 encoded basic authentication string.
-     * @param user Username.
-     * @param pass Password.
+     * Convert a utf8 string into URI encoded base64 string.
+     * @param input A utf8 string.
      * @returns {string}
      */
-    getBasicAuth : function(user, pass){
-        return 'Basic '+btoa(user+':'+pass);
+    stringToBase64 : function(input){
+        return this.isNode === true ? new Buffer(input).toString('base64') : window.btoa(unescape(encodeURIComponent(input)));
+    },
+    /**
+     * Convert a URI encoded base64 string utf8 string into URI encoded base64 string.
+     * @param input A utf8 string.
+     * @returns {string}
+     */
+    base64ToString : function(input){
+        return this.isNode === true ? new Buffer(input, 'base64').toString('utf8') : decodeURIComponent(escape(window.atob(input)));
     },
     /**
      * Generate a GUID.
@@ -880,7 +889,6 @@ MagnetJS.Transport = {
      * @param {function} [failback] Executes if the request failed.
      */
     requestJQuery : function(body, metadata, callback, failback){
-        var me = this;
         var dataStr = (!MagnetJS.Utils.isEmptyObject(body) && (metadata.contentType == 'application/json' || metadata.contentType == 'text/uri-list')) ? JSON.stringify(body) : body;
         $.support.cors = true;
         var details = {
@@ -984,6 +992,9 @@ MagnetJS.Transport = {
         var headers = MagnetJS.Utils.mergeObj({
             'Content-Type' : metadata.contentType
         }, MagnetJS.Transport.Headers);
+        if(metadata.headers)
+            for(var i=metadata.headers.length;i--;)
+                headers[metadata.headers[i].name] = metadata.headers[i].val;
         metadata.protocol = reqObj.protocol;
         if(reqObj.hostname){
             this.requestNode(body, metadata, {
@@ -1189,6 +1200,11 @@ MagnetJS.Request.prototype.send = function(callback, failback){
                 val  : me.options.callOptions.serverTimeout || 0
             });
         }
+        if(requestObj.params.multipartResponse)
+            requestObj.params.headers.push({
+                name : 'Accept',
+                val  : 'multipart/related'
+            });
         MagnetJS.Transport.request(requestObj.body, requestObj.params, me.options, function(result, details){
             if(me.metadata.params.controller == 'MMSDKLoginService' && me.metadata.params.name == 'login' && result != 'SUCCESS')
                 me.onResponseError(callback, failback, result, details);
@@ -1211,21 +1227,22 @@ MagnetJS.Request.prototype.setup = function(schema, params, attributes){
     params.contentType = params.contentType || 'application/json';
     params.dataType = params.dataType || 'json';
     params._path = params.path;
-    for(var attr in attributes){
-        if(attributes.hasOwnProperty(attr)){
-            if(attributes[attr].isMagnetModel && attributes[attr].attributes) attributes[attr] = attributes[attr].attributes;
+    var multipart = params.multipartRequest ? new MagnetJS.Multipart() : undefined;
+    var requestData = formatModel(attributes, multipart);
+    for(var attr in requestData){
+        if(requestData.hasOwnProperty(attr)){
             switch(schema[attr].style){
                 case 'TEMPLATE' :
-                    params._path = params._path.replace('{'+attr+'}', attributes[attr].replace('magnet://', ''));
+                    params._path = params._path.replace('{'+attr+'}', requestData[attr].replace('magnet://', ''));
                     break;
                 case 'QUERY' :
-                    query += '&'+attr+'='+attributes[attr];
+                    query += '&'+attr+'='+requestData[attr];
                     break;
                 case 'PLAIN' :
-                    plains[attr] = attributes[attr];
+                    plains[attr] = requestData[attr];
                     break;
                 case 'FORM' :
-                    forms[attr] = attributes[attr];
+                    forms[attr] = requestData[attr];
                     params.contentType = 'application/x-www-form-urlencoded';
                     break;
             }
@@ -1237,6 +1254,10 @@ MagnetJS.Request.prototype.setup = function(schema, params, attributes){
         if(MagnetJS.Utils.isPrimitiveType(schema[attrs[0]].type)) params.contentType = 'text/html';
     }else{
         body = MagnetJS.Utils.mergeObj(plains, forms);
+    }
+    if(typeof multipart != 'undefined'){
+        params.contentType = 'multipart/related';
+        body = multipart.close(body);
     }
     params._path = (params.basePathOnly === true ? params._path : '/rest'+params._path)+query;
     params._path = params._path.indexOf('?') == -1 ? params._path.replace('&', '?') : params._path;
@@ -1363,8 +1384,8 @@ MagnetJS.Request.prototype.formatResponse = function(body, callback){
             }
         }else if(MagnetJS.Utils.isModelOrCollection(params.returnType) === true){
             callback(this.jsonToModel(params.returnType, body));
-        }else if(typeof body == 'string' && body.indexOf('multipart/related') != -1){
-            callback(multipartParser(body));
+        }else if(typeof body == 'string' && body.indexOf('--BOUNDARY--') != -1){
+            callback(multipartToObject(body));
         }else{
             callback(out);
         }
@@ -1381,38 +1402,37 @@ MagnetJS.Request.prototype.formatResponse = function(body, callback){
  * @returns {*}
  */
 MagnetJS.Request.prototype.jsonToModel = function(returnType, body, multipart){
-    var modelType = (returnType.indexOf('[]') != -1) ? returnType.replace('[]', '') : returnType;
+    var modelType = getModelType(returnType);
     if(MagnetJS.Models[modelType] && returnType.indexOf('[]') != -1 && body.page && MagnetJS.Utils.isArray(body.page)){
-        return new MagnetJS.Collection(modelType, body.page);
-    }else if(MagnetJS.Models[modelType] && body['magnet-type']){
-        return new MagnetJS.Models[modelType](body);
-    }else if(!multipart && typeof body == 'string' && body.indexOf('multipart/related') != -1){
-        var out = multipartParser(body);
-        if(MagnetJS.Utils.isArray(out)){
-            if(out.length == 1) return this.jsonToModel(modelType, out[0].val, true);
-            for(var i=0;i<out.length;++i)
-                out[i].val = this.jsonToModel(modelType, out[i].val, true);
-            return out;
-        }else{
-            return body;
-        }
-    }else{
-        return body;
+        body = new MagnetJS.Collection(modelType, body.page);
+    }else if(MagnetJS.Models[modelType] && MagnetJS.Utils.isArray(body)){
+        for(var i=0;i<body.length;++i)
+            body[i] = this.jsonToModel(modelType, body[i]);
+    }else if(MagnetJS.Models[modelType] && MagnetJS.Utils.isObject(body) && body['magnet-type']){
+        body = new MagnetJS.Models[modelType](body);
+        for(var attr in body.attributes)
+            if(body.schema[attr] && body.schema[attr].type && MagnetJS.Utils.isModelOrCollection(body.schema[attr].type))
+                body.attributes[attr] = this.jsonToModel(getModelType(body.schema[attr].type), body.attributes[attr]);
+    }else if(!multipart && typeof body == 'string' && body.indexOf('--BOUNDARY--') != -1){
+        var out = multipartToObject(body);
+        body = MagnetJS.Utils.isObject(out) ? this.jsonToModel(modelType, out) : out;
     }
+    return body;
 }
 
-// A simple multipart/related parser. Only supports parts which only contain the Content-Type header.
-function multipartParser(str){
-    var contents = parts = [];
-    var boundary = str.match(/boundary=[a-zA-Z0-9-_'\/\(\)+_,-\.:=\\?]+/i);
-    if(boundary.length > 0){
-        parts = getParts(str, boundary[0].replace('boundary=', ''));
-        for(var i=0;i<parts.length;++i)
-            contents.push(getContent(parts[i]));
-        return contents;
-    }else{
-        return str;
-    }
+// get type of Model
+function getModelType(type){
+    return (type.indexOf('[]') != -1) ? type.replace('[]', '') : type;
+}
+
+// A simple multipart/related parser.
+function multipartToObject(str){
+    var boundary = 'BOUNDARY';
+    var parts = getParts(str, boundary);
+    var json = getJSONContent(parts[0]);
+    for(var i=1;i<parts.length;++i)
+        getContent(json, parts[i]);
+    return json;
 }
 // returns an array of parts.
 function getParts(str, boundary){
@@ -1421,23 +1441,93 @@ function getParts(str, boundary){
     ary.pop();
     return ary;
 }
-// returns an object containing the content-type and data.
-function getContent(str){
-    var contentType, content;
-    var contents = str.split('\n');
+// get JSON object
+function getJSONContent(str){
+    var content = str, contentType, contents = str.split('\r\n');
     for(var i=0;i<contents.length;++i){
         if(contents[i].indexOf('Content-Type') != -1){
-            contentType = contents[i];
-            content = {
-                contentType : contentType.replace(/Content-Type[ ]*:/, '').replace(/^\s+|\s+$/g, ''),
-                val         : str.replace(contentType, '')
-            };
-            content.val = MagnetJS.Utils.getValidJSON(content.val) || content.val;
-            contents.slice(i);
+            contentType = contents[i].replace(/Content-Type[ ]*:/, '').replace(/^\s+|\s+$/g, '');
+            content = content.replace(contents[i], '');
             break;
         }
     }
-    return content;
+    return contentType == 'application/json' ? MagnetJS.Utils.getValidJSON(content) : content;
+}
+// returns an object containing the content-type and data.
+function getContent(json, str){
+    var content = {}, encoding, id;
+    content.val = str;
+    var contents = str.split('\r\n');
+    for(var i=0;i<contents.length;++i){
+        if(contents[i].indexOf('Content-Type') != -1){
+            content.mimeType = contents[i].replace(/Content-Type[ ]*:/, '').replace(/^\s+|\s+$/g, '');
+            content.val = content.val.replace(contents[i], '');
+        }
+        if(contents[i].indexOf('Content-Transfer-Encoding') != -1){
+            encoding = contents[i].replace(/Content-Transfer-Encoding[ ]*:/, '').replace(/^\s+|\s+$/g, '');
+            content.val = content.val.replace(contents[i], '');
+        }
+        if(contents[i].indexOf('Content-Id') != -1){
+            id = contents[i].replace(/Content-Id[ ]*:/, '').replace(/^\s+|\s+$/g, '');
+            content.val = content.val.replace(contents[i], '');
+            break;
+        }
+    }
+    if(encoding == 'base64')
+        content.val = MagnetJS.Utils.base64ToString(content.val.replace(/(\r\n|\n|\r)/gm, ''));
+    else if(content.mimeType == 'application/json')
+        content.val = MagnetJS.Utils.getValidJSON(content.val);
+    else if(!MagnetJS.Utils.isNode && (content.mimeType == 'application/xml' || content.mimeType == 'text/xml'))
+        content.val = MagnetJS.Utils.getValidXML(content.val);
+    else
+        content.val = content.val.replace(/^\s+|\s+$/g, '');
+    mapToObject(json, id, content);
+}
+// recursively format the content of a multipart/related part
+function mapToObject(json, id, data){
+    for(var attr in json){
+        if(MagnetJS.Utils.isObject(json[attr]) || MagnetJS.Utils.isArray(json[attr]))
+            mapToObject(json[attr], id, data);
+        else if(json[attr] == id)
+            json[attr] = data;
+    }
+}
+// recursively format request data
+function formatModel(data, multipart, model){
+    for(var attr in data){
+        if(data.hasOwnProperty(attr) && data[attr]){
+            if(data[attr].isMagnetModel && data[attr].attributes){
+                formatModel(data[attr].attributes, multipart, data[attr]);
+                data[attr] = data[attr].attributes;
+            }else if(MagnetJS.Utils.isArray(data[attr])){
+                formatModel(data[attr], multipart);
+            }else if(multipart && typeof model != 'undefined' && model.schema[attr] && (model.schema[attr].type == '_data' || model.schema[attr].type == 'binary')){
+                data[attr] = multipart.add(data[attr].mimeType, data[attr].val);
+            }
+        }
+    }
+    return data;
+}
+// A simple multipart/related writer.
+MagnetJS.Multipart = function(){
+    this.boundary = 'BOUNDARY';
+    this.message = '';
+    this.prefix = 'DATA_';
+    this.index = 0;
+}
+MagnetJS.Multipart.prototype.add = function(mime, val){
+    var id = this.prefix+String(++this.index);
+    this.message += '--'+this.boundary+'\r\n';
+    this.message += 'Content-Type: '+mime+'\r\n';
+    this.message += 'Content-Transfer-Encoding: base64\r\n';
+    this.message += 'Content-Id: '+id+'\r\n\r\n';
+    this.message += MagnetJS.Utils.stringToBase64(val)+'\r\n\r\n';
+    return id;
+}
+MagnetJS.Multipart.prototype.close = function(body){
+    this.message += '--'+this.boundary+'--';
+    this.message = '--'+this.boundary+'\r\n'+'Content-Type: application/json\r\n\r\n'+JSON.stringify(body)+'\r\n\r\n'+this.message;
+    return this.message;
 }
 /**
  * @constructor
@@ -2371,5 +2461,10 @@ var CryptoJS=CryptoJS||function(s,p){var m={},l=m.lib={},n=function(){},r=l.Base
             d,e,j,9,a[29]),e=m(e,f,c,d,u,14,a[30]),d=m(d,e,f,c,A,20,a[31]),c=l(c,d,e,f,s,4,a[32]),f=l(f,c,d,e,v,11,a[33]),e=l(e,f,c,d,z,16,a[34]),d=l(d,e,f,c,C,23,a[35]),c=l(c,d,e,f,w,4,a[36]),f=l(f,c,d,e,r,11,a[37]),e=l(e,f,c,d,u,16,a[38]),d=l(d,e,f,c,y,23,a[39]),c=l(c,d,e,f,B,4,a[40]),f=l(f,c,d,e,h,11,a[41]),e=l(e,f,c,d,q,16,a[42]),d=l(d,e,f,c,t,23,a[43]),c=l(c,d,e,f,x,4,a[44]),f=l(f,c,d,e,A,11,a[45]),e=l(e,f,c,d,D,16,a[46]),d=l(d,e,f,c,j,23,a[47]),c=n(c,d,e,f,h,6,a[48]),f=n(f,c,d,e,u,10,a[49]),e=n(e,f,c,d,
             C,15,a[50]),d=n(d,e,f,c,s,21,a[51]),c=n(c,d,e,f,A,6,a[52]),f=n(f,c,d,e,q,10,a[53]),e=n(e,f,c,d,y,15,a[54]),d=n(d,e,f,c,w,21,a[55]),c=n(c,d,e,f,v,6,a[56]),f=n(f,c,d,e,D,10,a[57]),e=n(e,f,c,d,t,15,a[58]),d=n(d,e,f,c,B,21,a[59]),c=n(c,d,e,f,r,6,a[60]),f=n(f,c,d,e,z,10,a[61]),e=n(e,f,c,d,j,15,a[62]),d=n(d,e,f,c,x,21,a[63]);b[0]=b[0]+c|0;b[1]=b[1]+d|0;b[2]=b[2]+e|0;b[3]=b[3]+f|0},_doFinalize:function(){var a=this._data,k=a.words,b=8*this._nDataBytes,h=8*a.sigBytes;k[h>>>5]|=128<<24-h%32;var l=s.floor(b/
         4294967296);k[(h+64>>>9<<4)+15]=(l<<8|l>>>24)&16711935|(l<<24|l>>>8)&4278255360;k[(h+64>>>9<<4)+14]=(b<<8|b>>>24)&16711935|(b<<24|b>>>8)&4278255360;a.sigBytes=4*(k.length+1);this._process();a=this._hash;k=a.words;for(b=0;4>b;b++)h=k[b],k[b]=(h<<8|h>>>24)&16711935|(h<<24|h>>>8)&4278255360;return a},clone:function(){var a=t.clone.call(this);a._hash=this._hash.clone();return a}});r.MD5=t._createHelper(q);r.HmacMD5=t._createHmacHelper(q)})(Math);
+
+/*!
+ *  window.btoa/window.atob shim
+ */
+(function(){function t(t){this.message=t}var e="undefined"!=typeof exports?exports:this,r="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";t.prototype=Error(),t.prototype.name="InvalidCharacterError",e.btoa||(e.btoa=function(e){for(var o,n,a=0,i=r,c="";e.charAt(0|a)||(i="=",a%1);c+=i.charAt(63&o>>8-8*(a%1))){if(n=e.charCodeAt(a+=.75),n>255)throw new t("'btoa' failed: The string to be encoded contains characters outside of the Latin1 range.");o=o<<8|n}return c}),e.atob||(e.atob=function(e){if(e=e.replace(/=+$/,""),1==e.length%4)throw new t("'atob' failed: The string to be decoded is not correctly encoded.");for(var o,n,a=0,i=0,c="";n=e.charAt(i++);~n&&(o=a%4?64*o+n:n,a++%4)?c+=String.fromCharCode(255&o>>(6&-2*a)):0)n=r.indexOf(n);return c})})();
 
 })(typeof exports === 'undefined' ? this['MagnetJS'] || (this['MagnetJS']={}) : exports);
