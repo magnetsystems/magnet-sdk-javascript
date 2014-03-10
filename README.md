@@ -28,14 +28,11 @@ Download and place magnet-sdk.js into a directory within your project. In your H
 
 ### Import the SDK into your Node.js app
 
-From command line, navigate to the root directory of a node.js project. Use node package manager (installed with node.js) to include the SDK in your application.
+From command line, navigate to the root directory of a node.js project. Place the magnet-sdk.js into a directory with your project. You will need to reference the SDK within your application logic as shown below.
 
 ```
-npm install magnet-sdk
+var MagnetJS = require('./lib/magnet-sdk');
 ```
-
-This will install the SDK into the node_modules directory of your node.js project.
-
 
 ## Notes / Caveats
 
