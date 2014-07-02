@@ -1,16 +1,15 @@
-/*!*
- * @fileoverview Magnet Javascript SDK
- * {@link https://factory.magnet.com/docs/javascript-sdk/ Magnet Javascript SDK}
- *
- * @version 2.2.1
- */
-
-(function(MagnetJS){
-
-    /**
-     * Namespace for the Magnet Javascript SDK.
-     * @namespace MagnetJS
+    /*!*
+     * @fileoverview Magnet Mobile Server SDK for JavaScript
+     *
+     * @version 2.3.0-RC1
      */
+
+    (function(MagnetJS){
+
+/**
+ * Namespace for the Magnet Mobile Server SDK for JavaScript.
+ * @namespace MagnetJS
+ */
 
 /**
  * @global
@@ -19,29 +18,28 @@
  */
 MagnetJS.Config = {
     /**
-     * @property {string} endpointUrl Host of the Magnet Mobile App Server.
+     * @property {string} endpointUrl The host for the Magnet Mobile App Server.
      */
     endpointUrl            : '',
     /**
-     * @property {boolean} logging Enable to display logs during code execution for debugging purposes.
+     * @property {boolean} logging Enable display of logs during code execution for debugging purposes.
      */
     logging                : true,
     /**
-     * @property {boolean} locationDataCollection Enable to collection geolocation information.
-     * If enabled, geolocation will be sent to the server on every request.
-     */
-    locationDataCollection : false,
-    /**
-     * @property {boolean} storeCredentials Enable to store user credentials after a successful login.
+     * @property {boolean} storeCredentials Enable storage of user credentials after a successful login.
      * This is required for the LoginService.loginWithSavedCredentials method, allowing the user to login automatically
-     * after a restart of the app. Note: credentials are currently stored in plain text. Defaults to false.
+     * after a restart of the app. Note that credentials are stored in plain text. The default is false.
      */
     storeCredentials       : false,
     /**
-     * @property {boolean} debugMode Ignore self-signed certificates when saving files to filesystem. Only applicable
-     * for Phonegap client using FileTransfer API transport.
+     * @property {boolean} debugMode Ignore self-signed certificates when saving files to the file system. Only applicable
+     * to the Phonegap client when using FileTransfer API transport.
      */
-    debugMode              : false
+    debugMode              : false,
+    /**
+     * @property {string} sdkVersion Version of the Magnet Mobile SDK for JavaScript.
+     */
+    sdkVersion             : '2.3.0-RC1'
 };
 
 /**
@@ -57,23 +55,23 @@ if(!String.prototype.trim){
 }
 MagnetJS.Utils = {
     /**
-     * Returns whether current browser is an Android device.
+     * Indicates whether the current browser is an Android device.
      */
     isAndroid : (typeof navigator !== 'undefined' && navigator.userAgent) ? /Android|webOS/i.test(navigator.userAgent) : false,
     /**
-     * Returns whether current browser is an iOS device.
+     * Indicates whether the current browser is an iOS device.
      */
     isIOS : (typeof navigator !== 'undefined' && navigator.userAgent) ? /iPhone|iPad|iPod/i.test(navigator.userAgent) : false,
     /**
-     * Returns whether current browser is an iOS or Android device.
+     * Indicates whether the current browser is an iOS or Android device.
      */
     isMobile : (typeof navigator !== 'undefined' && navigator.userAgent) ? /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent) : false,
     /**
-     * Returns whether current client is a Node.js server.
+     * Indicates whether the current client is a Node.js server.
      */
     isNode : (typeof module !== 'undefined' && module.exports && typeof window === 'undefined'),
     /**
-     * Returns whether current client is a Cordova app.
+     * Indicates whether the current client is a Cordova app.
      */
     isCordova : (typeof navigator !== 'undefined' && navigator.userAgent) &&
         (typeof window !== 'undefined' && window.location && window.location.href) &&
@@ -81,9 +79,9 @@ MagnetJS.Utils = {
         /^file:\/{3}[^\/]/i.test(window.location.href) &&
         /ios|iphone|ipod|ipad|android/i.test(navigator.userAgent),
     /**
-     * Merges the attributes of the second object to the first object.
-     * @param {object} obj1 the object
-     * @param {object} obj2 the object whose attributes will be merged onto the first object.
+     * Merges the attributes of the second object into the first object.
+     * @param {object} obj1 The first object, into which the attributes will be merged.
+     * @param {object} obj2 The second object, whose attributes will be merged into the first object.
      */
     mergeObj : function(obj1, obj2){
         var obj1 = obj1 || {};
@@ -102,21 +100,21 @@ MagnetJS.Utils = {
         return obj1;
     },
     /**
-     * Determines whether the input is a javascript object.
+     * Determines whether the input is a JavaScript object.
      * @param {*} input The input to check.
      */
     isObject : function(input){
         return Object.prototype.toString.call(input) == "[object Object]";
     },
     /**
-     * Determines whether the input is a javascript array.
+     * Determines whether the input is a JavaScript array.
      * @param {*} input The input to check.
      */
     isArray : function(input){
         return Object.prototype.toString.call(input) === '[object Array]';
     },
     /**
-     * Convert string to JSON or returns false.
+     * Convert the specified string to JSON if successful; otherwise returns false.
      * @param {string} str The input to convert.
      */
     getValidJSON : function(str){
@@ -128,7 +126,7 @@ MagnetJS.Utils = {
         return str;
     },
     /**
-     * Convert string to XML or returns false.
+     * Convert the specified string to XML if successful; otherwise returns false.
      * @param {string} str The input to convert.
      */
     getValidXML : function(str){
@@ -154,9 +152,9 @@ MagnetJS.Utils = {
         return str;
     },
     /**
-     * Convert an object into Form Data.
+     * Convert the specified object into Form Data.
      * @param {string} str The input to convert.
-     * @returns {string} The Form Data string.
+     * @returns {string} A Form Data string.
      */
     objectToFormdata : {
         stringify : function(input){
@@ -172,7 +170,7 @@ MagnetJS.Utils = {
         }
     },
     /**
-     * Get all attribute names of the given object as an array.
+     * Retrieve all attribute names of the specified object as an array.
      * @param {object} obj The object to parse.
      */
     getAttributes : function(obj){
@@ -184,7 +182,19 @@ MagnetJS.Utils = {
         return ary;
     },
     /**
-     * Checks whether an object is empty.
+     * Retrieve all properties of the specified object as an array.
+     * @param {object} obj The object to parse.
+     */
+    getValues : function(obj){
+        var ary = [];
+        obj = obj || {};
+        for(var attr in obj){
+            if(obj.hasOwnProperty(attr)) ary.push(obj[attr]);
+        }
+        return ary;
+    },
+    /**
+     * Indicates whether the specified object is empty.
      * @param {object} obj The object to check.
      */
     isEmptyObject : function(obj){
@@ -206,7 +216,7 @@ MagnetJS.Utils = {
         }
     },
     /**
-     * Convert XHR and response headers into a javascript object.
+     * Convert XHR and response headers into a JavaScript object.
      * @param {object} xhr The XMLHTTPRequest object to convert.
      */
     convertHeaderStrToObj : function(xhr){
@@ -242,7 +252,7 @@ MagnetJS.Utils = {
         return !isNaN(parseFloat(input)) && isFinite(input);
     },
     /**
-     * Remove attributes not defined in attribute schema and returns result.
+     * Remove attributes not defined in the specified schema and returns the corresponding set of entity attributes.
      * @param {object} schema The controller or model schema consistent with the server.
      * @param {object} obj The current set of entity attributes.
      */
@@ -255,11 +265,11 @@ MagnetJS.Utils = {
         return result;
     },
     /**
-     * Handles basic validation of object attributes based on attribute schema.
+     * Handles basic validation of object attributes based on the specified schema.
      * @param {object} schema The controller or model schema consistent with the server.
      * @param {object} attributes The current set of controller or model attributes.
-     * @param {boolean} isUpdate If enabled, do not fail validation on missing required fields. Default is disabled.
-     * @returns {object|boolean} An array of invalid property objects or false if validation passes.
+     * @param {boolean} isUpdate If enabled, do not fail validation on missing required fields. Default is disabled (false).
+     * @returns {object|boolean} An array of invalid property objects, or false if validation passes.
      */
     validate : function(schema, attributes, isUpdate){
         var invalid = [], obj;
@@ -270,9 +280,11 @@ MagnetJS.Utils = {
                     attribute : attr
                 };
                 var type = schema[attr].type;
-                if(schema[attr].optional === false && (attributes[attr] == '' || !attributes[attr])){
+                if(typeof schema !== 'undefined' && typeof schema[attr] !== 'undefined' && typeof schema[attr].type !== 'undefined')
+                    type = type.trim();
+                if(schema[attr].optional === false && (typeof attributes[attr] === 'undefined' || attributes[attr] === '')){
                     if(!isUpdate) obj.reason = 'required field blank';
-                }else if(attributes[attr] && ((type == 'integer' || type == 'int' || type == 'long' || type == 'float') && !MagnetJS.Utils.isNumeric(attributes[attr]))){
+                }else if(attributes[attr] && ((type == 'integer' || type == 'biginteger' || type == 'bigdecimal' || type == 'double' || type == 'long' || type == 'float' || type == 'short' || type == 'byte') && !MagnetJS.Utils.isNumeric(attributes[attr]))){
                     obj.reason = 'not numeric';
                 }else if(attributes[attr] && type == 'boolean' && attributes[attr] !== 'true' && attributes[attr] !== true && attributes[attr] !== 'false' && attributes[attr] !== false){
                     obj.reason = 'not boolean';
@@ -287,7 +299,7 @@ MagnetJS.Utils = {
         return invalid.length == 0 ? false : invalid;
     },
     /**
-     * Determines whether a feature is available in the current browser or mobile client.
+     * Determines whether the specified feature is available in the current browser or mobile client.
      * @param {string} str Name of a global variable.
      */
     hasFeature : function(str){
@@ -298,56 +310,90 @@ MagnetJS.Utils = {
         }
     },
     /**
-     * Determines whether the attribute is a primitive type.
+     * Determines whether the specified attribute is a primitive type.
      * @param {string} str The attribute type.
      */
     isPrimitiveType : function(str){
-        return '|byte|short|int|long|float|double|boolean|char|string|integer|void|array|[]|java.lang.String|java.util.List|'.indexOf('|'+str+'|') != -1;
+        return '|byte|short|int|long|float|double|boolean|char|string|integer|void|'.indexOf('|'+str+'|') != -1;
     },
     /**
-     * Determines whether the attribute is of Model or Collection type.
+     * Determines whether the specified attribute is an array type. If its type is an array, the type of data in the array is returned; otherwise returns false.
+     * @param {string} str The attribute type.
+     */
+    getArrayType : function(str){
+        return str.indexOf('[]') != -1 ? str.slice(0, -2) : false;
+    },
+    /**
+     * Determines the data type for the specified attribute type.
+     * @param {string} str The attribute type.
+     */
+    getDataType : function(str){
+        var type;
+        switch(Object.prototype.toString.call(str)){
+            case '[object Number]'    : type = 'integer'; break;
+            case '[object String]'    : type = 'string'; break;
+            case '[object Array]'     : type = 'array'; break;
+            case '[object Object]'    : type = 'object'; break;
+            case '[object Date]'      : type = 'date'; break;
+            case '[object Boolean]'   : type = 'boolean'; break;
+        }
+        return type;
+    },
+    /**
+     * Determines whether the specified attribute is of type date.
+     * @param {string} str The attribute type.
+     */
+    isDateType : function(str){
+        return ('|date|'.indexOf('|'+str+'|') != -1) === true;
+    },
+    /**
+     * Determines whether the specified attribute is of type binary.
+     * @param {string} str The attribute type.
+     */
+    isBinaryType : function(str){
+        return ('|binary|_data|'.indexOf('|'+str+'|') != -1) === true;
+    },
+    /**
+     * Determines whether the specified attribute is a generic object type.
+     * @param {string} str The attribute type.
+     */
+    isGenericObject : function(str){
+        return ('|object|'.indexOf('|'+str+'|') != -1) === true;
+    },
+    /**
+     * Determines whether the specified attribute is of type Model or Collection.
      * @param {string} str The attribute type.
      */
     isModelOrCollection : function(str){
-        return (this.isPrimitiveType(str) === false && ('|object|date|binary|_data|'.indexOf('|'+str+'|') != -1) === false);
+        return (MagnetJS.Models[str] || MagnetJS.Models[this.getArrayType(str)]) ? true : false;
     },
     /**
-     * Converts the given Date object as an ISO 8601 Extended Format string. A shim for clients which do not support .toISOString.
-     * @param {Date} date A Date object.
-     * @returns {string}
+     * Converts the specified Date object as an ISO 8601 Extended Format string. This is a shim for clients that do not support .toISOString.
+     * @param {Date} date The Date object to be converted to an ISO 8601 Extended Format string.
+     * @returns {string} An equivalent ISO 8601 Extended Format string.
      */
-    dateToISO8601 : function(date){
-        if(!Date.prototype.toISOString){
-            (function(){
-                function pad(number){
-                    return (number < 10 ? '0' : '')+number;
-                }
-                Date.prototype.toISOString = function(){
-                    return this.getUTCFullYear() +
-                        '-' + pad(this.getUTCMonth() + 1) +
-                        '-' + pad(this.getUTCDate()) +
-                        'T' + pad(this.getUTCHours()) +
-                        ':' + pad(this.getUTCMinutes()) +
-                        ':' + pad(this.getUTCSeconds()) +
-                        '.' + (this.getUTCMilliseconds() / 1000).toFixed(3).slice(2, 5) +
-                        'Z';
-                };
-            }());
-        }
-        return date.toISOString();
+    dateToISO8601 : function(d){
+        function pad(n){return n<10 ? '0'+n : n}
+        return d.getUTCFullYear()+'-'
+            + pad(d.getUTCMonth()+1)+'-'
+            + pad(d.getUTCDate())+'T'
+            + pad(d.getUTCHours())+':'
+            + pad(d.getUTCMinutes())+':'
+            + pad(d.getUTCSeconds())+'Z';
     },
     /**
-     * Converts the given Date object as an ISO 8601 Extended Format string.
-     * @param {string} str A ISO 8601 Extended Format date string.
-     * @returns {object} A Date object.
+     * Converts the specified Date string as an ISO 8601 Extended Format Date object.
+     * @param {string} str An ISO 8601 Extended Format date string.
+     * @returns {object} A Date object equivalent to the specified ISO 8601 Extended Format string.
      */
     ISO8601ToDate : function(str){
+        if(typeof str !== 'string') return false;
         var re = /(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(\.\d+)?(Z|([+-])(\d\d):(\d\d))/;
         var d = [];
         d = str.match(re);
         if(!d){
             MagnetJS.Log("Couldn't parse ISO 8601 date string '" + str + "'");
-            return str;
+            return false;
         }
         var a = [1,2,3,4,5,6,10,11];
         for(var i in a) d[a[i]] = parseInt(d[a[i]], 10);
@@ -363,20 +409,20 @@ MagnetJS.Utils = {
         return new Date(ms);
     },
     /**
-     * Convert a utf8 string into URI encoded base64 string.
-     * @param input A utf8 string.
-     * @returns {string}
+     * Convert a UTF-8 string into URI-encoded base64 string.
+     * @param input A UTF-8 string.
+     * @returns {string} An equivalent URI-encoded base64 string.
      */
     stringToBase64 : function(input){
-        return this.isNode === true ? new Buffer(input).toString('base64') : window.btoa(unescape(encodeURIComponent(input)));
+        return (this.isNode === true && typeof Buffer !== 'undefined') ? new Buffer(input).toString('base64') : window.btoa(unescape(encodeURIComponent(input)));
     },
     /**
-     * Convert a URI encoded base64 string utf8 string into URI encoded base64 string.
-     * @param input A utf8 string.
-     * @returns {string}
+     * Convert a URI-encoded base64 string into a UTF-8 string.
+     * @param input A URI-encoded base64 string.
+     * @returns {string} An equivalent UTF-8 string.
      */
     base64ToString : function(input){
-        return this.isNode === true ? new Buffer(input, 'base64').toString('utf8') : decodeURIComponent(escape(window.atob(input)));
+        return (this.isNode === true && typeof Buffer !== 'undefined') ? new Buffer(input, 'base64').toString('utf8') : decodeURIComponent(escape(window.atob(input)));
     },
     /**
      * Generate a GUID.
@@ -410,9 +456,9 @@ MagnetJS.Promise.prototype = {
     args       : null,
     _isPromise : true,
     /**
-     * Stores success and error callbacks and calls them if Promise status is 'resolved' or 'rejected'.
-     * @param success A callback which is fired upon a 'resolved' status.
-     * @param error A callback which is fired upon a 'rejected' status.
+     * Stores success and error callbacks, and calls them if the Promise status is 'resolved' or 'rejected'.
+     * @param success A callback that is fired upon a 'resolved' status.
+     * @param error A callback that is fired upon a 'rejected' status.
      * @returns {MagnetJS.Promise} A promise object.
      */
     then : function(success, error){
@@ -459,9 +505,9 @@ MagnetJS.Promise.prototype = {
         return this;
     },
     /**
-     * Stores a callback which is fired if the Promise is rejected.
-     * @param {function} error An error callback.
-     * @returns {MagnetJS.Promise}
+     * Stores a callback that is fired if the Promise is rejected.
+     * @param {function} error The error callback to be stored.
+     * @returns {MagnetJS.Promise} A promise object.
      */
     error : function(error){
         var defer = new MagnetJS.Deferred();
@@ -478,10 +524,10 @@ MagnetJS.Promise.prototype = {
         return this;
     },
     /**
-     * Call and resolve a callback. If the result if a Promise object, bind a
-     * new set of callbacks to the Promise to continue the chain.
+     * Call and resolve a callback. If the result is a Promise object, bind a
+     * new set of callbacks to the Promise object to continue the chain.
      * @param {object} obj An object containing the callback function and a Deferred object.
-     * @param [*] args Arguments associated with this Promise.
+     * @param {*} args Arguments associated with this Promise.
      */
     exec : function(obj, args){
         setTimeout(function(){
@@ -492,7 +538,7 @@ MagnetJS.Promise.prototype = {
     }
 };
 /**
- * @class A Deferred object handles execution of resolve and reject methods which trigger the success or error callback.
+ * @class A Deferred object handles execution of resolve and reject methods, which trigger the success or error callbacks.
  * @constructor
  */
 MagnetJS.Deferred = function(){
@@ -533,8 +579,8 @@ MagnetJS.Deferred.prototype = {
     }
 };
 /**
- * Asynchronously execute an arbitrary number of promises and return an array of success and error arguments in 'then' function upon completion.
- * @param {MagnetJS.Promise} promises An arbitrary number of promises.
+ * Asynchronously execute the specified promises. On completion, return an array of success and error arguments in a 'then' function.
+ * @param {MagnetJS.Promise} promises An object containing the specified promises.
  */
 MagnetJS.Deferred.all = function(){
     var deferred = new MagnetJS.Deferred();
@@ -549,10 +595,10 @@ MagnetJS.Deferred.all = function(){
         });
     }
     return deferred.promise;
-}
+};
 
 /**
- * A class for extending an object with event
+ * A class for extending an object with an event.
  * @memberof MagnetJS
  * @namespace Events
  * @ignore
@@ -561,7 +607,7 @@ MagnetJS.Events = {
     /**
      * Extends an existing object to handle events.
      * @param {object} me An instance of a MagnetJS Controller.
-     * @returns {boolean} Whether the event handlers were created.
+     * @returns {boolean} Indicates whether the event handlers were created.
      */
     create : function(me){
         if(!me._events && !me.invoke && !me.on && !me.unbind){
@@ -569,7 +615,7 @@ MagnetJS.Events = {
             me.on = function(eventId, callback){
                 me._events[eventId] = me._events[eventId] || [];
                 me._events[eventId].push(callback);
-            }
+            };
             me.invoke = function(events){
                 if(typeof events === typeof []){
                     for(var i=events.length;i--;){
@@ -586,20 +632,403 @@ MagnetJS.Events = {
                         }
                     }
                 }
-            }
+            };
             me.unbind = function(eventId){
                 if(me._events[eventId]) delete me._events[eventId];
-            }
+            };
             return true;
         }else{
             return false;
         }
     }
-}
+};
+
+/**
+ * A connector to manage data in a Web SQL database.
+ * @memberof MagnetJS
+ * @namespace SQLConnector
+ * @ignore
+ */
+MagnetJS.SQLConnector = {
+    /**
+     * @attribute {Database} [db] An SQL Lite database object.
+     */
+    db : undefined,
+    schemas : {},
+    /**
+     * @attribute {object} dbOptions SQL Lite database options.
+     */
+    dbOptions : {
+        name    : 'MMSDK',
+        version : '1.0',
+        display : 'Magnet_JS_SDK_DB',
+        size    : 5000000
+    },
+    create : function(table, kvp, callback, failback){
+        var me = this;
+        me.db.transaction(function(tx){
+            var props = MagnetJS.Utils.getAttributes(kvp).join(', ');
+            var vals = MagnetJS.Utils.getValues(kvp);
+            MagnetJS.Log('INSERT INTO '+table+' ('+props+') VALUES ('+me.getPlaceholders(vals)+')', vals);
+            tx.executeSql('INSERT INTO '+table+' ('+props+') VALUES ('+me.getPlaceholders(vals)+')', vals, function(insertTX, res){
+                kvp.id = res.insertId;
+                callback(kvp);
+            });
+        }, function(e){
+            MagnetJS.Log('error inserting a record: ', e);
+            failback(e);
+        });
+    },
+    update : function(table, id, kvp, callback, failback){
+        this.db.transaction(function(tx){
+            delete kvp.id;
+            var props = MagnetJS.Utils.getAttributes(kvp).join('=?, ')+'=?';
+            var vals = MagnetJS.Utils.getValues(kvp);
+            vals.push(id);
+            MagnetJS.Log('UPDATE '+table+' SET '+props+' WHERE id=?', vals);
+            tx.executeSql('UPDATE '+table+' SET '+props+' WHERE id=?', vals, function(){
+                callback(kvp);
+            });
+        }, function(e){
+            MagnetJS.Log('error updating a record: ', e);
+            failback(e);
+        });
+    },
+    get : function(table, input, callback, failback){
+        var me = this;
+        me.db.transaction(function(tx){
+            if(typeof input === 'undefined' || input === null || input === '') input = {1:1};
+            var props, vals, isQuery = typeof input === 'object';
+            if(isQuery){
+                props = MagnetJS.Utils.getAttributes(input).join('=? AND ')+'=?';
+                vals = MagnetJS.Utils.getValues(input);
+            }else{
+                props = 'id=?';
+                vals = [input];
+            }
+            MagnetJS.Log('SELECT * FROM '+table+' WHERE '+props, vals);
+            tx.executeSql('SELECT * FROM '+table+' WHERE '+props, vals, function(tx, results){
+                callback(me.formatResponse(results.rows, isQuery));
+            }, function(e){
+                MagnetJS.Log('error retrieving records: ', e);
+                failback(e);
+            });
+        }, function(e){
+            MagnetJS.Log('error setting up web sql transaction: ', e);
+            failback(e);
+        });
+    },
+    formatResponse : function(rows, isQuery){
+        var ary = [];
+        for(var i=0;i<rows.length;++i)
+            ary.push(rows.item(i));
+        return isQuery ? ary : ary[0];
+    },
+    remove : function(table, input, callback, failback){
+        var me = this;
+        me.db.transaction(function(tx){
+            var props = [], vals = [], aryProps = [], aryVals = [];
+            if(typeof input === 'object'){
+                for(var prop in input){
+                    if(MagnetJS.Utils.isArray(input[prop])){
+                        aryProps.push(prop+' IN ('+me.getPlaceholders(input[prop])+')');
+                        aryVals = aryVals.concat(MagnetJS.Utils.getValues(input[prop]));
+                    }else{
+                        props.push(prop+'=?');
+                        vals.push(input[prop]);
+                    }
+                }
+                props = props.concat(aryProps).join(' AND ');
+                vals = vals.concat(aryVals);
+            }else{
+                props = 'id=?';
+                vals = [input];
+            }
+            MagnetJS.Log('DELETE FROM '+table+' WHERE '+props, vals);
+            tx.executeSql('DELETE FROM '+table+' WHERE '+props, vals);
+        }, function(e){
+            MagnetJS.Log('error deleting a record: ', e);
+            failback(e);
+        }, callback);
+    },
+    clearTable : function(table, callback, failback){
+        this.db.transaction(function(tx){
+            MagnetJS.Log('DELETE FROM '+table);
+            tx.executeSql('DELETE FROM '+table);
+        }, function(e){
+            MagnetJS.Log('error clearing table: ', e);
+            failback(e);
+        }, callback);
+    },
+    createTableIfNotExist : function(table, schema, kvps, clearRecords, callback, failback){
+        var me = this, props, vals, columns = ['id INTEGER PRIMARY KEY AUTOINCREMENT'];
+        if(typeof schema === 'object'){
+            for(var prop in schema)
+                columns.push(prop+' '+schema[prop]);
+            columns = columns.join(', ');
+            me.schemas[table] = schema;
+        }
+        me.db.transaction(function(tx){
+            MagnetJS.Log('CREATE TABLE IF NOT EXISTS '+table+' ('+columns+')');
+            tx.executeSql('CREATE TABLE IF NOT EXISTS '+table+' ('+columns+')');
+            if(clearRecords === true){
+                MagnetJS.Log('DELETE FROM '+table);
+                tx.executeSql('DELETE FROM '+table);
+            }
+            if(MagnetJS.Utils.isArray(kvps)){
+                for(var i=0;i<kvps.length;++i){
+                    props = MagnetJS.Utils.getAttributes(kvps[i]).join(', ');
+                    vals = MagnetJS.Utils.getValues(kvps[i]);
+                    MagnetJS.Log('INSERT INTO '+table+' ('+props+') VALUES ('+me.getPlaceholders(vals)+')', vals);
+                    tx.executeSql('INSERT INTO '+table+' ('+props+') VALUES ('+me.getPlaceholders(vals)+')', vals);
+                }
+            }else if(kvps){
+                props = MagnetJS.Utils.getAttributes(kvps).join(', ');
+                vals = MagnetJS.Utils.getValues(kvps);
+                MagnetJS.Log('INSERT INTO '+table+' ('+props+') VALUES ('+me.getPlaceholders(vals)+')', vals);
+                tx.executeSql('INSERT INTO '+table+' ('+props+') VALUES ('+me.getPlaceholders(vals)+')', vals);
+            }
+        }, function(e){
+            MagnetJS.Log('error executing web sql transaction: ', e);
+            failback(e);
+        }, callback);
+    },
+    getPlaceholders : function(vals){
+        var ques = [];
+        for(var i=0;i<vals.length;++i) ques.push('?');
+        return ques.join(', ');
+    }
+};
+/**
+ * A connector to manage data in a local storage database.
+ * @memberof MagnetJS
+ * @namespace LocalStorage
+ * @ignore
+ */
+MagnetJS.LocalStorageConnector = {
+    create : function(table, kvp, callback){
+        setTimeout(function(){
+            var tableData = MagnetJS.Utils.getValidJSON(window.localStorage.getItem(table)) || [];
+            kvp.id = MagnetJS.Utils.getGUID();
+            tableData.push(kvp);
+            window.localStorage.setItem(table, JSON.stringify(tableData));
+            callback(kvp);
+        }, 1);
+    },
+    update : function(table, id, kvp, callback, failback){
+        var record;
+        setTimeout(function(){
+            var tableData = MagnetJS.Utils.getValidJSON(window.localStorage.getItem(table));
+            if(tableData){
+                for(var i=0;i<tableData.length;++i){
+                    if(tableData[i].id == id){
+                        for(var key in kvp)
+                            tableData[i][key] = kvp[key];
+                        record = tableData[i];
+                    }
+                }
+                if(typeof record === 'undefined'){
+                    failback('record-not-exist');
+                }else{
+                    window.localStorage.setItem(table, JSON.stringify(tableData));
+                    callback(record);
+                }
+            }else{
+                failback('table-not-exist');
+            }
+        }, 1);
+    },
+    get : function(table, input, callback, failback){
+        var records = [], valid = true;
+        setTimeout(function(){
+            var tableData = MagnetJS.Utils.getValidJSON(window.localStorage.getItem(table));
+            if(tableData){
+                if(typeof input === 'object'){
+                    for(var i=0;i<tableData.length;++i){
+                        for(var key in input)
+                            if(tableData[i][key] !== input[key])
+                                valid = false;
+                        if(valid === true) records.push(tableData[i]);
+                        valid = true;
+                    }
+                }else if(typeof input === 'undefined' || input === null || input === ''){
+                    records = tableData;
+                }else{
+                    records = undefined;
+                    for(var i=0;i<tableData.length;++i){
+                        if(tableData[i].id == input){
+                            records = tableData[i];
+                            break;
+                        }
+                    }
+                }
+                callback(records);
+            }else{
+                failback('table-not-exist');
+            }
+        }, 1);
+    },
+    remove : function(table, input, callback, failback){
+        var matched = true;
+        setTimeout(function(){
+            var tableData = MagnetJS.Utils.getValidJSON(window.localStorage.getItem(table));
+            if(tableData){
+                for(var i=tableData.length;i--;){
+                    if(typeof input === 'object'){
+                        matched = true;
+                        for(var prop in input){
+                            if(MagnetJS.Utils.isArray(input[prop])){
+                                if(input[prop].indexOf(tableData[i][prop]) == -1) matched = false;
+                            }else{
+                                if(tableData[i][prop] !== input[prop]) matched = false;
+                            }
+                        }
+                        if(matched) tableData.splice(i, 1);
+                    }else{
+                        if(tableData[i].id == input) tableData.splice(i, 1);
+                    }
+                }
+                window.localStorage.setItem(table, JSON.stringify(tableData));
+                callback();
+            }else{
+                failback('table-not-exist');
+            }
+        }, 1);
+    },
+    clearTable : function(table, callback){
+        setTimeout(function(){
+            window.localStorage.setItem(table, JSON.stringify([]));
+            callback();
+        }, 1);
+    },
+    createTableIfNotExist : function(table, schema, kvps, clearRecords, callback){
+        setTimeout(function(){
+            var tableData = (clearRecords === true ? [] : MagnetJS.Utils.getValidJSON(window.localStorage.getItem(table))) || [];
+            if(MagnetJS.Utils.isArray(kvps)){
+                for(var i=0;i<kvps.length;++i){
+                    kvps[i].id = MagnetJS.Utils.getGUID();
+                    tableData.push(kvps[i]);
+                }
+            }else if(kvps){
+                kvps.id = MagnetJS.Utils.getGUID();
+                tableData.push(kvps);
+            }
+            window.localStorage.setItem(table, JSON.stringify(tableData));
+            callback();
+        }, 1);
+    }
+};
+/**
+ * A connector to manage data in non-persistent memory store.
+ * @memberof MagnetJS
+ * @namespace SQLConnector
+ * @ignore
+ */
+MagnetJS.MemoryStoreConnector = {
+    /**
+     * @attribute {object} memory Memory store for Node.js and other platforms which do not support localStorage.
+     */
+    memory : {},
+    create : function(table, kvp, callback){
+        this.memory[table] = this.memory[table] || [];
+        kvp.id = MagnetJS.Utils.getGUID();
+        this.memory[table].push(kvp);
+        callback(kvp);
+    },
+    update : function(table, id, kvp, callback, failback){
+        var record;
+        if(this.memory[table]){
+            for(var i=0;i<this.memory[table].length;++i){
+                if(this.memory[table][i].id === id){
+                    for(var key in kvp)
+                        this.memory[table][i][key] = kvp[key];
+                    record = this.memory[table][i];
+                }
+            }
+            if(typeof record === 'undefined')
+                failback('record-not-exist');
+            else
+                callback(record);
+        }else{
+            failback('table-not-exist');
+        }
+    },
+    get : function(table, input, callback, failback){
+        var records = [], valid = true;
+        if(this.memory[table]){
+            if(typeof input === 'object'){
+                for(var i=0;i<this.memory[table].length;++i){
+                    for(var key in input)
+                        if(this.memory[table][i][key] !== input[key])
+                            valid = false;
+                    if(valid === true) records.push(this.memory[table][i]);
+                    valid = true;
+                }
+            }else if(typeof input === 'undefined' || input === null || input === ''){
+                records = this.memory[table];
+            }else{
+                records = undefined;
+                for(var i=0;i<this.memory[table].length;++i){
+                    if(this.memory[table][i].id == input){
+                        records = this.memory[table][i];
+                        break;
+                    }
+                }
+            }
+            callback(records);
+        }else{
+            failback('table-not-exist');
+        }
+    },
+    remove : function(table, input, callback, failback){
+        var matched = true;
+        if(this.memory[table]){
+            for(var i=this.memory[table].length;i--;){
+                if(typeof input === 'object'){
+                    matched = true;
+                    for(var prop in input){
+                        if(MagnetJS.Utils.isArray(input[prop])){
+                            if(input[prop].indexOf(this.memory[table][i][prop]) == -1)
+                                matched = false;
+                        }else{
+                            if(this.memory[table][i][prop] !== input[prop])
+                                matched = false;
+                        }
+                    }
+                    if(matched) this.memory[table].splice(i, 1);
+                }else{
+                    if(this.memory[table][i].id == input){
+                        this.memory[table].splice(i, 1);
+                    }
+                }
+            }
+            callback();
+        }else{
+            failback('table-not-exist');
+        }
+    },
+    clearTable : function(table, callback){
+        this.memory[table] = [];
+        callback();
+    },
+    createTableIfNotExist : function(table, schema, kvps, clearRecords, callback){
+        this.memory[table] = (clearRecords === true ? [] : this.memory[table]) || [];
+        if(MagnetJS.Utils.isArray(kvps)){
+            for(var i=0;i<kvps.length;++i){
+                kvps[i].id = MagnetJS.Utils.getGUID();
+                this.memory[table].push(kvps[i]);
+            }
+        }else if(kvps){
+            kvps.id = MagnetJS.Utils.getGUID();
+            this.memory[table].push(kvps);
+        }
+        callback();
+    }
+};
 
 /**
  * A class for storing a value into persistent storage. Currently relies on HTML5 localStorage.
- * Clients which do not support localStorage will fall back to memory store which will not persist past a
+ * Clients that do not support localStorage will fall back to a memory store that will not persist past a
  * restart of the app.
  * @memberof MagnetJS
  * @namespace Storage
@@ -607,54 +1036,116 @@ MagnetJS.Events = {
  */
 MagnetJS.Storage = {
     /**
-     * @attribute {object} memory Memory store for Node.js and other platforms which do not support localStorage.
+     * @attribute {object} connector The data connector to be used.
      */
-    memory : {},
+    connector : MagnetJS.MemoryStoreConnector,
     /**
-     * Set a key-value pair in storage.
-     * @param {string} key The key of the key-value pair.
-     * @param {*} val The value of the key-value pair.
-     * @param {boolean} [nonBlocking] Enable to continue with execution of code while the value is being set. Default is false.
+     * Create an object.
+     * @param {string} table The table in the database.
+     * @param {*} kvp An object containing values to set on the object.
      */
-    set : function(key, val, nonBlocking){
-        if(nonBlocking && MagnetJS.Utils.hasFeature('localStorage') === true)
-            setTimeout(function(){
-                window.localStorage.setItem(key, JSON.stringify(val));
-            }, 1);
-        else
-            MagnetJS.Utils.hasFeature('localStorage') === false ? this.memory[key] = val : window.localStorage.setItem(key, JSON.stringify(val));
-        return val;
+    create : function(table, kvp, callback, failback){
+        this.connector.create(table, kvp, function(record){
+            if(typeof callback === typeof Function)
+                callback(record);
+        }, function(e){
+            if(typeof failback === typeof Function)
+                failback(e);
+        });
     },
     /**
-     * Get a key-value pair from storage.
-     * @param {string} key The key of the key-value pair.
+     * Update values of the object corresponding to the specified ID.
+     * @param {string} table The table in the database.
+     * @param {*} id The unique identifier of the object to set.
+     * @param {*} kvp An object containing values to set on the object.
      */
-    get : function(key){
-        return MagnetJS.Utils.hasFeature('localStorage') === false ? this.memory[key] : MagnetJS.Utils.getValidJSON(window.localStorage.getItem(key));
+    update : function(table, id, kvp, callback, failback){
+        this.connector.update(table, id, kvp, function(record){
+            if(typeof callback === typeof Function)
+                callback(record);
+        }, function(e){
+            if(typeof failback === typeof Function)
+                failback(e);
+        });
     },
     /**
-     * Remove a key-value pair from storage.
-     * @param {string} key The key of the key-value pair.
-     * @param {boolean} [nonBlocking] Enable to continue with execution of code while the value is being set. Default is false.
+     * Get an object using an ID or a query. A query is an object of properties, each containing an array of property matches. For example, {"foo":"a1"]}.
+     * @param {string} table The table in the database.
+     * @param {string|object} input An ID or a query object containing the required matches.
      */
-    remove : function(key, nonBlocking){
-        if(nonBlocking && MagnetJS.Utils.hasFeature('localStorage') === true)
-            setTimeout(function(){
-                window.localStorage.removeItem(key)
-            }, 1);
-        else
-            MagnetJS.Utils.hasFeature('localStorage') === false ? (this.memory[key] ? delete this.memory[key] : '') : window.localStorage.removeItem(key);
+    get : function(table, input, callback, failback){
+        this.connector.get(table, input, function(records){
+            if(typeof callback === typeof Function)
+                callback(records);
+        }, function(e){
+            if(typeof failback === typeof Function)
+                failback(e);
+        });
     },
     /**
-     * Retrieve or create a keystore and return it.
+     * Remove an object using an ID or a query. A query is an object of properties, each containing an array of property matches. For example, {"foo":"a1"]}.
+     * @param {string} table The table in the database.
+     * @param {*} id The unique identifier of the object to remove.
      */
-    getOrCreate : function(key, val){
-        if(MagnetJS.Utils.hasFeature('localStorage') === false)
-            return this.memory[key] || (this.memory[key] = val);
-        else
-            return MagnetJS.Utils.getValidJSON(window.localStorage.getItem(key)) || this.set(key, val);
+    remove : function(table, input, callback, failback){
+        this.connector.remove(table, input, function(){
+            if(typeof callback === typeof Function)
+                callback();
+        }, function(e){
+            if(typeof failback === typeof Function)
+                failback(e);
+        });
+    },
+    /**
+     * Clear a table.
+     * @param {string} table The table in the database.
+     */
+    clearTable : function(table, callback, failback){
+        this.connector.clearTable(table, function(){
+            if(typeof callback === typeof Function)
+                callback();
+        }, function(e){
+            if(typeof failback === typeof Function)
+                failback(e);
+        });
+    },
+    /**
+     * Retrieve or create a keystore, and return it.
+     * @param {string} table The table in the database.
+     * @param {object} schema An object containing the property types.
+     * @param {object|array} [kvps] An array of objects to add to the table, or a single object.
+     * @param {boolean} [clearTable] If enabled, the table will be cleared.
+     */
+    createTableIfNotExist : function(table, schema, kvps, clearTable, callback, failback){
+        this.connector.createTableIfNotExist(table, schema, kvps, clearTable, function(){
+            if(typeof callback === typeof Function)
+                callback();
+        }, function(e){
+            if(typeof failback === typeof Function)
+                failback(e);
+        });
+    },
+    /**
+     * Selects the best storage persister available to be used by the platform.
+     */
+    setupConnector : function(){
+        if(MagnetJS.Utils.hasFeature('openDatabase')){
+            MagnetJS.SQLConnector.db = window.openDatabase(
+                MagnetJS.SQLConnector.dbOptions.name,
+                MagnetJS.SQLConnector.dbOptions.version,
+                MagnetJS.SQLConnector.dbOptions.display,
+                MagnetJS.SQLConnector.dbOptions.size
+            );
+            MagnetJS.Storage.connector = MagnetJS.SQLConnector;
+        }else if(MagnetJS.Utils.hasFeature('localStorage') === true){
+            MagnetJS.Storage.connector = MagnetJS.LocalStorageConnector;
+        }else{
+            MagnetJS.Storage.connector = MagnetJS.MemoryStoreConnector;
+        }
+
     }
-}
+};
+MagnetJS.Storage.setupConnector();
 
 /**
  * A basic wrapper for console.log to control output of debugging code.
@@ -669,8 +1160,8 @@ MagnetJS.Log = function(){
 
 /**
  * @method
- * @desc Set MagnetJS SDK Config attributes.
- * @param {object} obj An object of key-value pairs to be set in the MagnetJS attributes.
+ * @desc Set MagnetJS SDK configuration attributes.
+ * @param {object} obj An object containing key-value pairs to be set in the MagnetJS attributes.
  */
 MagnetJS.set = function(obj){
     for(var prop in obj){
@@ -678,8 +1169,6 @@ MagnetJS.set = function(obj){
             if(prop == 'endpointUrl' && /^(ftp|http|https):/.test(obj[prop] === false))
                 throw('invalid endpointUrl - no protocol');
             MagnetJS.Config[prop] = obj[prop];
-            if(prop == 'locationDataCollection' && obj[prop] === true) MagnetJS.Geolocation.start();
-            if(prop == 'locationDataCollection' && obj[prop] === false) MagnetJS.Geolocation.stop();
         }
     }
     return this;
@@ -687,13 +1176,12 @@ MagnetJS.set = function(obj){
 
 /**
  * @method
- * @desc Reset MagnetJS SDK Config attributes to their default values.
+ * @desc Reset MagnetJS SDK configuration attributes to their default values.
  */
 MagnetJS.reset = function(){
     MagnetJS.set({
         endpointUrl            : '',
-        logging                : true,
-        locationDataCollection : false
+        logging                : true
     });
     return this;
 }
@@ -701,7 +1189,7 @@ MagnetJS.reset = function(){
 /**
  * @method
  * @desc Load a model or controller resource into memory. For NodeJS only.
- * @param {string} path Relative path to the entity or controller resource.
+ * @param {string} path A relative path to the entity or controller resource.
  */
 MagnetJS.define = function(path){
     var resource = require(path), type = resource.Controllers ? 'Controllers' : 'Models';
@@ -710,108 +1198,26 @@ MagnetJS.define = function(path){
 }
 
 /**
- * A class for handling retrieval of geolocation. The MagnetJS.Config property 'locationDataCollection'
- * must be enabled and the client must support the navigator.geolocation API for this feature to work. Note that this
- * class is designed solely to provide updated geolocation information to the server, and that the navigator.geolocation
- * feature can be used independently in your app.
+ * A class designed to assist in creating constraints related to geolocation.
  * @memberof MagnetJS
  * @namespace Geolocation
  */
 MagnetJS.Geolocation = {
     /**
-     * The most recent geolocation object.
-     */
-    current : undefined,
-    /**
-     * The state of the last request for geolocation information. If it was successful, the state will be 'OK'. Otherwise,
-     * it will contain an error code.
-     */
-    state   : '',
-    /**
-     * A message of the last request for geolocation information. If it was successful, this property will be empty.
-     * Otherwise, it will contain an error message.
-     */
-    message : '',
-    poll    : null,
-    /**
-     * Geolocation configuration properties. See Phonegap documentation for more detailed information about these properties (http://docs.phonegap.com).
-     */
-    options : {
-        /**
-         * @property {number} maximumAge Accept a cached position whose age is no greater than the specified time in milliseconds.
-         */
-        maximumAge         : 3000,
-        /**
-         * @property {number} timeout The maximum length of time (milliseconds) that is allowed for the geolocation request
-         * to succeed. If the geolocation request has not completed by this time, the error callback is called.
-         */
-        timeout            : 5000,
-        /**
-         * @property {boolean} enableHighAccuracy Provides a hint that the application needs the best possible results.
-         */
-        enableHighAccuracy : true,
-        /**
-         * @property {number} interval Time in seconds before the geolocation information is refreshed.
-         */
-        interval           : 300
-    },
-    /**
-     * Attempts to update the geolocation information. Optionally pass in a callback or failback after completion.
-     * @param [callback] A callback to be fired after a successful geolocation request.
-     * @param [failback] A callback to be fired after a failed geolocation request.
-     */
-    refresh : function(callback, failback){
-        var me = this;
-        if(MagnetJS.Config.locationDataCollection === true && MagnetJS.Utils.isObject(navigator) && navigator.geolocation && navigator.geolocation.getCurrentPosition){
-            navigator.geolocation.getCurrentPosition(function(Position){
-                me.current = Position;
-                me.state = 'OK';
-                me.message = '';
-                if(typeof callback === typeof Function) callback();
-            }, function(e){
-                me.state = e.code;
-                me.message = e.message;
-                if(typeof failback === typeof Function) failback();
-            }, me.options);
-        }else{
-            MagnetJS.Log('Geolocation APIs are not available.');
-            me.state = 'ERROR';
-            me.message = 'MagnetJS.Config.locationDataCollection not enabled or Geolocation feature is not available in your app.';
-        }
-    },
-    /**
-     * Returns a geo URI based on RFC 5870 for the most recent geolocation information.
+     * Converts a Cordova Position object returned from navigator.geolocation APIs into a geo URI based on RFC 5870.
+     * @param {Position} position A Cordova Position object.
      * @returns {string} RFC 5870 geo URI.
      */
-    getCurrent : function(){
-        return this.state == 'OK' ? 'geo:'+this.current.coords.latitude+','+this.current.coords.longitude+','+(this.current.coords.altitude ? this.current.coords.altitude : 0)+',crs=wgs84,u='+(this.current.coords.accuracy ? Math.round(this.current.coords.accuracy) : 0) : false;
+    positionToRFC5870 : function(position){
+        if(typeof position === 'undefined' || position === null || !position.coords) return false;
+        return 'geo:'+position.coords.latitude+','+position.coords.longitude+','+(position.coords.altitude ? position.coords.altitude : 0)+',crs=wgs84,u='+(position.coords.accuracy ? Math.round(position.coords.accuracy) : 0);
     },
     /**
-     * Start polling for geolocation information in intervals specified in the MagnetJS.Geolocation.options.interval property.
-     */
-    start : function(){
-        var me = this;
-        me.stop();
-        if(MagnetJS.Utils.isObject(navigator) && navigator.geolocation && navigator.geolocation.getCurrentPosition){
-            me.poll = setInterval(function(){
-                me.refresh();
-            }, me.options.interval * 1000);
-        }else{
-            MagnetJS.Log('Geolocation APIs are not available.');
-        }
-    },
-    /**
-     * Stop polling for geolocation information.
-     */
-    stop : function(){
-        clearInterval(this.poll);
-    },
-    /**
-     * Determines whether the given MagnetJS.Geoentry is within the boundaries defined by the given MagnetJS.Geostore.
+     * Determines whether the given MagnetJS.Geoentry is within the polygon defined by the MagnetJS.Geostore.
      * @param {MagnetJS.Geostore} geostore A MagnetJS.Geostore object.
      * @param {MagnetJS.Geoentry} geoentry A MagnetJS.Geoentry object.
      */
-    isWithinBoundaries : function(geostore, geoentry){
+    isWithinPolygon : function(geostore, geoentry){
         var crossings = 0;
         if(typeof geostore === 'undefined' || !geostore.points) throw 'The Geostore object provided is invalid';
         if(typeof geoentry === 'undefined') throw 'The Geoentry object provided is invalid';
@@ -847,8 +1253,30 @@ MagnetJS.Geolocation = {
             return (blue >= red);
         }
         return (crossings % 2 == 1);
+    },
+    /**
+     * Determines whether the given geo point is within the radius of the target geo point.
+     * @param {MagnetJS.Geoentry} target A MagnetJS.Geoentry point whose radius will be searched.
+     * @param {MagnetJS.Geoentry} point A MagnetJS.Geoentry point that will be tested to determine whether it is in range of the target.
+     * @param {integer} radius An integer representing the radius of the point in meters.
+     */
+    isWithinPointRadius : function(target, point, radius){
+        function dist(target, point){
+            var toRad = function(x){
+                return x * Math.PI / 180;
+            };
+            var dLat = toRad(point.lat-target.lat);
+            var dLon = toRad(point.lng-target.lng);
+            var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(toRad(target.lat)) * Math.cos(toRad(point.lat)) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return (6378137 * c);
+        }
+        return radius <= dist(point, target);
     }
-}
+};
+
 /**
  * A class containing transport functions for facilitating requests and responses between a client and a Mobile App Server.
  * @memberof MagnetJS
@@ -869,57 +1297,64 @@ MagnetJS.Transport = {
         metadata._path = metadata._path || metadata.path;
         MagnetJS.Config.endpointUrl = MagnetJS.Config.endpointUrl.toLowerCase();
         metadata._path = (metadata.local === true || /^(ftp|http|https):/.test(metadata._path) === true) ? metadata._path : MagnetJS.Config.endpointUrl+metadata._path;
+        metadata.contentType = metadata.contentType == 'application/json' ? 'application/json; magnet-type=controller-params' : metadata.contentType;
         if(MagnetJS.Utils.isNode){
-            this.initNodeRequest(body, metadata, callback, failback);
+            this.initNodeRequest(body, metadata, options, callback, failback);
         }else if(MagnetJS.Utils.isCordova && options.callOptions && options.callOptions.saveAs && !options.callOptions.returnRaw){
             this.cordovaFileTransfer(body, metadata, options, callback, failback);
-        }else if(typeof jQuery !== 'undefined'){
-            this.requestJQuery(body, metadata, callback, failback);
+        }else if(typeof jQuery !== 'undefined' && !MagnetJS.Utils.isBinaryType(metadata.returnType) && !metadata.isBinary){
+            this.requestJQuery(body, metadata, options, callback, failback);
         }else if(XMLHttpRequest !== 'undefined'){
-            this.requestXHR(body, metadata, callback, failback);
+            this.requestXHR(body, metadata, options, callback, failback);
         }else{
             throw('request-transport-unavailable');
         }
     },
     /**
-     * Transport with JQuery over HTTP/SSL protocol with REST. Cross origin requests from a web browser are currently not supported.
+     * Transport with JQuery over HTTP/SSL protocol with REST. Cross-origin requests from a web browser are currently not supported.
      * @param {object|string|number} [body] The body of the request.
      * @param {object} metadata Request metadata.
+     * @param {object} options Request options.
      * @param {function} [callback] Executes if the request succeeded.
      * @param {function} [failback] Executes if the request failed.
      */
-    requestJQuery : function(body, metadata, callback, failback){
-        var dataStr = (!MagnetJS.Utils.isEmptyObject(body) && (metadata.contentType == 'application/json' || metadata.contentType == 'text/uri-list')) ? JSON.stringify(body) : body;
+    requestJQuery : function(body, metadata, options, callback, failback){
+        var me = this;
+        var reqBody = me.parseBody(metadata.contentType, body);
         $.support.cors = true;
         var details = {
-            body : body,
+            body : reqBody,
             info : {
                 url : metadata._path
             }
         };
-        $.ajax({
+        options.call.transportHandle = $.ajax({
             type        : metadata.method,
             url         : metadata._path,
             timeout     : 30000,
             dataType    : metadata.dataType,
             contentType : metadata.contentType,
-            data        : dataStr,
+            data        : reqBody,
             beforeSend  : function(xhr){
                 if(metadata.headers){
                     for(var i=metadata.headers.length;i--;){
                         xhr.setRequestHeader(metadata.headers[i].name, metadata.headers[i].val);
                     }
                 }
+                xhr.setRequestHeader('Accept', me.createAcceptHeader(metadata.dataType));
             },
             success : function(data, status, xhr){
                 if(typeof callback === typeof Function){
                     details.info.xhr = MagnetJS.Utils.convertHeaderStrToObj(xhr);
+                    details.contentType = xhr.getResponseHeader('Content-Type');
                     details.status = xhr.status;
+                    data = data.result || data;
                     callback(data, details);
                 }
             },
             error : function(xhr, metadata, error){
                 details.info.xhr = MagnetJS.Utils.convertHeaderStrToObj(xhr);
+                details.contentType = xhr.getResponseHeader('Content-Type');
                 details.status = xhr.status;
                 if(metadata == 'parsererror')
                     callback(xhr.responseText, details);
@@ -929,26 +1364,30 @@ MagnetJS.Transport = {
         });
     },
     /**
-     * Transport with XMLHttpRequest over HTTP/SSL protocol with REST. Cross origin requests from a web browser are currently not supported.
+     * Transport with XMLHttpRequest over HTTP/SSL protocol with REST. Cross-origin requests from a web browser are currently not supported.
      * @param {object|string|number} [body] The body of the request.
      * @param {object} metadata Request metadata.
+     * @param {object} options Request options.
      * @param {function} [callback] Executes if the request succeeded.
      * @param {function} [failback] Executes if the request failed.
      */
-    requestXHR : function(body, metadata, callback, failback){
+    requestXHR : function(body, metadata, options, callback, failback){
         var me = this, resBody;
         var reqBody = me.parseBody(metadata.contentType, body);
         var details = {
-            body : body,
+            body : reqBody,
             info : {
                 url : metadata._path
             }
         };
-        var xhr = new XMLHttpRequest();
+        options.call.transportHandle = new XMLHttpRequest();
+        var xhr = options.call.transportHandle;
         xhr.timeout = 30000;
+        if(MagnetJS.Utils.isBinaryType(metadata.returnType)) xhr.overrideMimeType('text/plain; charset=x-user-defined');
         xhr.onreadystatechange = function(){
             if(xhr.readyState == 4){
                 details.status = xhr.status;
+                details.contentType = xhr.getResponseHeader('Content-Type');
                 details.info.xhr = MagnetJS.Utils.convertHeaderStrToObj(xhr);
                 resBody = xhr.responseText;
                 if(typeof xhr.responseXML !== 'undefined' && xhr.responseXML != null){
@@ -956,9 +1395,15 @@ MagnetJS.Transport = {
                 }else{
                     try{
                         resBody = JSON.parse(resBody);
+                        resBody = resBody.result;
                     }catch(e){}
                 }
                 if(me.isSuccess(xhr.status)){
+                    if(MagnetJS.Utils.isBinaryType(metadata.returnType))
+                        resBody = {
+                            mimeType : details.contentType,
+                            val      : resBody
+                        };
                     if(typeof callback === typeof Function) callback(resBody, details);
                 }else{
                     if(typeof failback === typeof Function) failback(resBody, details);
@@ -967,6 +1412,7 @@ MagnetJS.Transport = {
         };
         xhr.ontimeout = function(){
             details.status = 0;
+            details.contentType = xhr.getResponseHeader('Content-Type');
             details.info.xhr = MagnetJS.Utils.convertHeaderStrToObj(xhr);
             if(typeof failback === typeof Function) failback('request-timeout', details);
         };
@@ -983,10 +1429,11 @@ MagnetJS.Transport = {
      * Initialize a transport with Node.js. For NodeJS only.
      * @param {object|string|number} [body] The body of the request.
      * @param {object} metadata Request metadata.
+     * @param {object} options Request options.
      * @param {function} [callback] Executes if the request succeeded.
      * @param {function} [failback] Executes if the request failed.
      */
-    initNodeRequest : function(body, metadata, callback, failback){
+    initNodeRequest : function(body, metadata, options, callback, failback){
         var urlParser = require('url');
         var reqObj = urlParser.parse(metadata._path);
         var headers = MagnetJS.Utils.mergeObj({
@@ -1005,10 +1452,10 @@ MagnetJS.Transport = {
                 rejectUnauthorized : false,
                 requestCert        : false,
                 headers            : headers
-            }, callback, failback);
+            }, options, callback, failback);
         }else{
             if(typeof failback === typeof Function){
-                failback('error parsing url', {
+                failback('error-parsing-url', {
                     body : body,
                     info : {
                         url : metadata._path
@@ -1022,77 +1469,86 @@ MagnetJS.Transport = {
      * @param {object|string|number} [body] The body of the request.
      * @param {object} metadata Request metadata.
      * @param {object} httpRequestmetadata http.request metadata.
+     * @param {object} options Request options.
      * @param {function} [callback] Executes if the request succeeded.
      * @param {function} [failback] Executes if the request failed.
      */
-    requestNode : function(body, metadata, httpRequestmetadata, callback, failback){
+    requestNode : function(body, metadata, httpRequestmetadata, options, callback, failback){
         var me = this, http = require('http'), https = require('https');
         var reqBody = me.parseBody(metadata.contentType, body);
-        var req = (metadata.protocol == 'https:' ? https : http).request(httpRequestmetadata, function(res){
-            var output = '', details = {
-                body : body,
+        options.call.transportHandle = (metadata.protocol == 'https:' ? https : http).request(httpRequestmetadata, function(res){
+            var resBody = '';
+            var details = {
+                body : reqBody,
                 info : {
                     metadata : metadata,
                     url      : metadata._path,
-                    request  : req,
+                    request  : options.call.transportHandle,
                     response : res
                 },
-                status : res.statusCode
+                contentType : res.headers['content-type'],
+                status      : res.statusCode
             };
-            res.setEncoding(metadata.returnType == '_data' ? 'binary' : 'utf8');
+            res.setEncoding(MagnetJS.Utils.isBinaryType(metadata.returnType) ? 'binary' : 'utf8');
             res.on('data', function(chunk){
-                output += chunk;
+                resBody += chunk;
             });
             res.on('end', function(){
-                var resBody = output;
                 try{
-                    resBody = JSON.parse(output);
+                    resBody = JSON.parse(resBody);
+                    resBody = resBody.result || resBody;
                 }catch(e){}
                 if(me.isSuccess(res.statusCode)){
-                    if(typeof callback === typeof Function) callback(resBody, details);
+                    if(MagnetJS.Utils.isBinaryType(metadata.returnType))
+                        resBody = {
+                            mimeType : details.contentType,
+                            val      : resBody
+                        };
+                    if(typeof callback === typeof Function)
+                        callback(resBody, details);
                 }else{
-                    if(typeof failback === typeof Function) failback(resBody, details);
+                    if(typeof failback === typeof Function)
+                        failback(resBody, details);
                 }
             });
         });
-        req.on('error', function(e){
+        options.call.transportHandle.on('error', function(e){
             if(typeof failback === typeof Function){
                 var details = {
                     body : body,
                     info : {
                         metadata : metadata,
                         url      : metadata._path,
-                        request  : req
+                        request  : options.call.transportHandle
                     },
                     status : 0
                 };
                 failback(e, details);
             }
         });
-        if(body) req.write(reqBody, 'utf8');
-        req.end();
+        if(body) options.call.transportHandle.write(reqBody, metadata.isBinary === true ? 'binary' : 'utf8');
+        options.call.transportHandle.end();
     },
     /**
-     * Returns a boolean determining whether the status code is a success or failure.
+     * Determines whether the status code is a success or failure.
      * @param {number} code The HTTP request status code.
      */
     isSuccess : function(code){
-        return code >= 200 && code <= 207;
+        return code >= 200 && code <= 299;
     },
     /**
-     * Formats the body into the appropriate type of string given the Content-Type header.
+     * Formats the body into the appropriate string type using the specified Content-Type header.
      * @param {object|string|number} type The Content-Type of the request.
      * @param {string} input The original request body.
      */
     parseBody : function(type, input){
         var QS = MagnetJS.Utils.isNode ? require('querystring') : MagnetJS.Utils.objectToFormdata;
-        var out;
         switch(type){
-            case 'application/x-www-form-urlencoded' : out = QS.stringify(input); break;
-            case 'application/json' : out = JSON.stringify(input); break;
-            default : out = input;
+            case 'application/x-www-form-urlencoded' : input = QS.stringify(input); break;
+            case 'application/json' : input = JSON.stringify(input); break;
+            case 'application/json; magnet-type=controller-params' : input = JSON.stringify(input); break;
         }
-        return out;
+        return input;
     },
     /**
      * Create an Accept header.
@@ -1106,9 +1562,10 @@ MagnetJS.Transport = {
             case 'xml'  : str = 'application/xml;q=1.0'; break;
             case 'html' : str = 'text/plain;q=1.0'; break;
             case 'text' : str = 'text/plain;q=1.0'; break;
-            default     : str = 'application/json;q=1.0'; break;
+            case 'json' : str = 'application/json; magnet-type=controller-result'; break;
+            default     : str = '*/*;q=1.0'; break;
         }
-        return str+',*/*;q=0.5';
+        return str;
     },
     /**
      * Transport with Phonegap's FileTransfer API.
@@ -1130,15 +1587,16 @@ MagnetJS.Transport = {
         if(metadata.headers)
             for(var i=metadata.headers.length;i--;)
                 headers[metadata.headers[i].name] = metadata.headers[i].val;
-        MagnetJS.FileManager.getFS(function(){
-            var fileTransfer = new FileTransfer();
-            fileTransfer.download(
+        MagnetJS.FileManager.getFS(function(fs, filePath){
+            options.call.transportHandle = new FileTransfer();
+            options.call.transportHandle.download(
                 metadata._path,
-                MagnetJS.FileManager.filePath+options.callOptions.saveAs,
+                filePath+options.callOptions.saveAs,
                 function(fileEntry){
                     if(typeof callback === typeof Function) callback(fileEntry, details);
                 },
-                function(e){
+                function(e, sourceUrl, targetUrl, status){
+                    details.status = status;
                     if(typeof failback === typeof Function) failback(e, details);
                 }, MagnetJS.Config.debugMode, {
                     headers : headers
@@ -1148,13 +1606,13 @@ MagnetJS.Transport = {
             if(typeof failback === typeof Function) failback(MagnetJS.FileManager.status, details);
         });
     }
-}
+};
 MagnetJS.Transport.Headers = {};
 
 
 /**
  * @constructor
- * @class Request A request instance which handles the request and response.
+ * @class Request A request instance that handles the request and response.
  * @param [instance] The object creating the request.
  * @param options The object creating the request.
  * @ignore
@@ -1163,7 +1621,11 @@ MagnetJS.Request = function(instance, options, metadata){
     this.instance = instance;
     this.options = options;
     this.metadata = metadata;
+    this.options.callOptions = this.options.callOptions || new MagnetJS.CallOptions();
+    this.options.call = this.options.call || new MagnetJS.Call();
+    this.options.call.setOptions(this.options.callOptions);
 }
+
 /**
  * Send a request.
  * @param {function} [callback] Executes if the request succeeded.
@@ -1171,95 +1633,126 @@ MagnetJS.Request = function(instance, options, metadata){
  */
 MagnetJS.Request.prototype.send = function(callback, failback){
     var me = this;
-    me.beforeRequest(callback, failback, function(){
-        var requestObj = me.setup(me.metadata.schema || {}, me.metadata.params, me.options.attributes);
-        requestObj.params.headers = requestObj.params.headers || [];
-        var geo = MagnetJS.Geolocation.getCurrent();
-        if(MagnetJS.Geolocation.state == 'OK' && geo)
-            requestObj.params.headers.push({
-                name : 'Geolocation',
-                val  : geo
+    setTimeout(function(){
+        me.beforeRequest(callback, failback, function(){
+            me.metadata.params.contentType = me.metadata.params.contentType || (me.metadata.params.consumes ? me.metadata.params.consumes[0] : undefined) || 'application/json';
+            var requestObj = me.setup(me.metadata.schema || {}, me.metadata.params, me.options.attributes);
+            requestObj.params.headers = requestObj.params.headers || [];
+            if(MagnetJS.Utils.isCordova && typeof device === typeof {} && device.uuid){
+                requestObj.params.headers.push({
+                    name : 'X-Magnet-Device-Id',
+                    val  : device.uuid
+                });
+                requestObj.params.headers.push({
+                    name : 'User-Agent',
+                    val  : device.platform+' '+device.version+' '+device.model+' '+navigator.userAgent
+                });
+            }
+            if(!MagnetJS.Utils.isNode)
+                requestObj.params.headers.push({
+                    name : 'X-Magnet-Auth-Challenge',
+                    val  : 'disabled'
+                });
+            if(me.options && me.options.callOptions && me.options.callOptions.callId && me.options.callOptions.isReliable){
+                requestObj.params.headers.push({
+                    name : 'X-Magnet-Correlation-id',
+                    val  : me.options.callOptions.callId
+                });
+                requestObj.params.headers.push({
+                    name : 'X-Magnet-Result-Timeout',
+                    val  : me.options.callOptions.serverTimeout || 0
+                });
+            }
+            if(requestObj.params.produces && requestObj.params.produces[0] === 'multipart/related')
+                requestObj.params.headers.push({
+                    name : 'Accept',
+                    val  : 'multipart/related'
+                });
+            if(me.options && me.options.callOptions && me.options.callOptions.headers)
+                for(var prop in me.options.callOptions.headers)
+                    requestObj.params.headers.push({
+                        name : prop,
+                        val  : me.options.callOptions.headers[prop]
+                    });
+            me.options.call.state = MagnetJS.CallState.EXECUTING;
+            MagnetJS.Transport.request(requestObj.body, requestObj.params, me.options, function(result, details){
+                if(me.metadata.params.controller == 'MMSDKLoginService' && me.metadata.params.name == 'login' && result != 'SUCCESS'){
+                    me.options.call.state = MagnetJS.CallState.FAILED;
+                    me.onResponseError(callback, failback, result, details);
+                }else{
+                    me.options.call.state = MagnetJS.CallState.SUCCESS;
+                    me.onResponseSuccess(callback, result, details)
+                }
+            }, function(e, details){
+                me.options.call.state = MagnetJS.CallState.FAILED;
+                me.onResponseError(callback, failback, e, details);
             });
-        if(MagnetJS.Utils.isCordova && typeof device === typeof {} && device.uuid)
-            requestObj.params.headers.push({
-                name : 'X-Magnet-Device-Id',
-                val  : device.uuid
-            });
-        if(MagnetJS.Utils.isCordova)
-            requestObj.params.headers.push({
-                name : 'X-Magnet-Auth-Challenge',
-                val  : 'disabled'
-            });
-        if(me.options && me.options.callOptions && me.options.callOptions.correlationId){
-            requestObj.params.headers.push({
-                name : 'X-Magnet-Correlation-id',
-                val  : me.options.callOptions.correlationId
-            });
-            requestObj.params.headers.push({
-                name : 'X-Magnet-Result-Timeout',
-                val  : me.options.callOptions.serverTimeout || 0
-            });
-        }
-        if(requestObj.params.multipartResponse)
-            requestObj.params.headers.push({
-                name : 'Accept',
-                val  : 'multipart/related'
-            });
-        MagnetJS.Transport.request(requestObj.body, requestObj.params, me.options, function(result, details){
-            if(me.metadata.params.controller == 'MMSDKLoginService' && me.metadata.params.name == 'login' && result != 'SUCCESS')
-                me.onResponseError(callback, failback, result, details);
-            else
-                me.onResponseSuccess(callback, result, details);
-        }, function(e, details){
-            me.onResponseError(callback, failback, e, details);
         });
-    });
+    }, 1);
 }
 
 /**
  * Prepares a request for transport.
  * @param {object} schema A controller method schema object.
  * @param {object} params A request parameter object.
- * @param {object} attributes Controller method attributes as a key-value pair.
+ * @param {object} attributes Controller method attributes, represented as a key-value pair.
  */
 MagnetJS.Request.prototype.setup = function(schema, params, attributes){
-    var query = '', body = {}, plains = {}, forms = {};
-    params.contentType = params.contentType || 'application/json';
+    var query = '', body = {}, plains = {}, forms = {}, matrix = '', dataParam = false;
     params.dataType = params.dataType || 'json';
     params._path = params.path;
-    var multipart = params.multipartRequest ? new MagnetJS.Multipart() : undefined;
-    var requestData = formatModel(attributes, multipart);
+    var multipart = params.contentType == 'multipart/related' ? new MagnetJS.Multipart() : undefined;
+    var requestData = formatRequest(attributes, multipart, undefined, schema);
     for(var attr in requestData){
-        if(requestData.hasOwnProperty(attr)){
-            switch(schema[attr].style){
-                case 'TEMPLATE' :
-                    params._path = params._path.replace('{'+attr+'}', requestData[attr].replace('magnet://', ''));
-                    break;
-                case 'QUERY' :
-                    query += '&'+attr+'='+requestData[attr];
-                    break;
-                case 'PLAIN' :
-                    plains[attr] = requestData[attr];
-                    break;
-                case 'FORM' :
-                    forms[attr] = requestData[attr];
-                    params.contentType = 'application/x-www-form-urlencoded';
-                    break;
+        if(requestData.hasOwnProperty(attr) && schema[attr]){
+            if((schema[attr].type == '_data' || schema[attr].type == 'binary') && typeof multipart == 'undefined'){
+                dataParam = attr;
+            }else{
+                switch(schema[attr].style){
+                    case 'TEMPLATE' :
+                        params._path = setTemplateParam(params._path, attr, requestData[attr]);
+                        break;
+                    case 'QUERY' :
+                        query += setQueryParam(attr, requestData[attr]);
+                        break;
+                    case 'PLAIN' :
+                        if(this.metadata.params.method === 'DELETE' || this.metadata.params.method === 'GET')
+                            query += setQueryParam(attr, requestData[attr]);
+                        else
+                            plains[attr] = requestData[attr];
+                        break;
+                    case 'HEADER' :
+                        params.headers = params.headers || [];
+                        params.headers.push({
+                            name : attr,
+                            val  : requestData[attr]
+                        });
+                        break;
+                    case 'MATRIX' :
+                        params._path = setTemplateParam(params._path, attr, setMatrixParam(attr, requestData[attr]));
+                        break;
+                    case 'FORM' :
+                        params.contentType = 'application/x-www-form-urlencoded';
+                        if(this.metadata.params.method === 'DELETE' || this.metadata.params.method === 'GET')
+                            query += setQueryParam(attr, requestData[attr]);
+                        else
+                            forms[attr] = requestData[attr];
+                        break;
+                }
             }
         }
     }
     var attrs = MagnetJS.Utils.getAttributes(plains);
-    if(MagnetJS.Utils.isEmptyObject(forms) && attrs.length == 1){
-        body = plains[attrs[0]];
-        if(MagnetJS.Utils.isPrimitiveType(schema[attrs[0]].type)) params.contentType = 'text/html';
+    if(dataParam){
+        params.isBinary = true;
+        params.contentType = requestData[dataParam].mimeType;
+        body = requestData[dataParam].val;
     }else{
         body = MagnetJS.Utils.mergeObj(plains, forms);
     }
-    if(typeof multipart != 'undefined'){
-        params.contentType = 'multipart/related';
+    if(typeof multipart != 'undefined')
         body = multipart.close(body);
-    }
-    params._path = (params.basePathOnly === true ? params._path : '/rest'+params._path)+query;
+    params._path = (params.basePathOnly === true ? params._path : '/rest'+params._path)+matrix+query;
     params._path = params._path.indexOf('?') == -1 ? params._path.replace('&', '?') : params._path;
     return {
         body   : body,
@@ -1267,35 +1760,49 @@ MagnetJS.Request.prototype.setup = function(schema, params, attributes){
     };
 }
 
+function setTemplateParam(path, attr, val){
+    return path.replace('{'+attr+'}', val);
+}
+
+function setQueryParam(attr, val){
+    return '&'+attr+'='+(typeof val === 'object' ? JSON.stringify(val) : val);
+}
+
+function setMatrixParam(attr, val){
+    return attr+'='+(typeof val === 'object' ? JSON.stringify(val) : val);
+}
+
 /**
- * Handles pre-request operations, most notably execution of CallOptions configurations.
+ * Handles pre-request operations, especially execution of CallOptions configurations.
  * @param {function} [callback] The success callback.
  * @param {function} [failback] The error callback.
  * @param {function} startRequest A callback function to continue execution of the request.
  */
 MagnetJS.Request.prototype.beforeRequest = function(callback, failback, startRequest){
-    var me = this, cacheObj = MagnetJS.CallManager.getCache(this.getCallId());
-    // if cache is available, return cache
+    var me = this, cacheObj = MagnetJS.CallManager.getCacheByHash(this.getCallHash());
     if(cacheObj){
+        me.options.call.state = MagnetJS.CallState.SUCCESS;
+        me.options.call.result = cacheObj.result;
+        me.options.call.details = cacheObj.details;
+        me.options.call.isResultFromCache = true;
         if(typeof callback === typeof Function) callback(cacheObj.result, cacheObj.details, true);
     }else{
         var callOptions = this.options.callOptions;
-        // if network state is offline or constraint is not met
         if(callOptions && MagnetJS.CallManager.isConstraintMet(callOptions.constraint) === false){
-            // if reliable call and request timeout is set
             if(callOptions.isReliable === true && MagnetJS.CallManager.isExpired(callOptions.requestAge) === false){
-                MagnetJS.CallManager.setRequestObject(me.getCallId(), me.options, me.metadata);
+                MagnetJS.CallManager.setRequestObject(me.options.call.callId, me.options, me.metadata);
+                me.options.call.state = MagnetJS.CallState.QUEUED;
                 if(typeof callback === typeof Function) callback('awaiting-constraint');
-                // AsyncCallOptions
             }else{
+                me.options.call.state = MagnetJS.CallState.FAILED;
                 if(typeof failback === typeof Function) failback('constraint-failure', {
                     constraint : callOptions.constraint,
                     current    : MagnetJS.CallManager.getConnectionState()
                 })
             }
         }else{
-            // if cordova, check connection state for none
             if(MagnetJS.Utils.isCordova && MagnetJS.CallManager.getConnectionState() == 'NONE'){
+                me.options.call.state = MagnetJS.CallState.FAILED;
                 if(typeof failback === typeof Function) failback('no-network-connectivity');
             }else{
                 startRequest();
@@ -1312,9 +1819,13 @@ MagnetJS.Request.prototype.beforeRequest = function(callback, failback, startReq
  */
 MagnetJS.Request.prototype.onResponseSuccess = function(callback, result, details){
     var me = this;
-    if(me.options.callOptions && me.options.callOptions.cacheAge != 0)
-        MagnetJS.CallManager.setCacheObject(me.getCallId(), me.options.callOptions, result, details);
-    me.formatResponse(result, function(convertedResult){
+    if(me.options.callOptions && me.options.callOptions.cacheAge != 0){
+        me.options.call.cachedTime = new Date();
+        MagnetJS.CallManager.setCacheObject(me.options.call.callId, me.getCallHash(), me.options.callOptions, result, details);
+    }
+    me.formatResponse(result, details, function(convertedResult){
+        me.options.call.result = convertedResult;
+        me.options.call.details = details;
         if(me.instance) me.instance.invoke(['Complete', 'Success', 'MMSDKComplete'], me.metadata.params.name, convertedResult, details);
         if(typeof callback === typeof Function) callback(convertedResult, details);
     });
@@ -1335,6 +1846,8 @@ MagnetJS.Request.prototype.onResponseError = function(callback, failback, error,
         var res = MagnetJS.Utils.getValidJSON(error);
         MagnetJS.OAuthHandler.invoke('OAuthLoginException', this.instance, this.options, this.metadata, res, callback, failback);
     }else{
+        this.options.call.resultError = error;
+        this.options.call.details = details;
         if(details.status == 401 || details.status == 403){
             error = 'session-expired';
             MagnetJS.LoginService.connectionStatus = 'Unauthorized';
@@ -1346,26 +1859,31 @@ MagnetJS.Request.prototype.onResponseError = function(callback, failback, error,
 }
 
 /**
- * Returns a callId based on a hash of the request parameters and body.
- * @returns {string}
+ * Returns a cache ID based on a hash of the request parameters and body.
+ * @returns {string} A cache ID.
  */
-MagnetJS.Request.prototype.getCallId = function(){
-    return MagnetJS.CallManager.getCallId(
-        this.metadata.params.controller,
-        this.metadata.params.name,
-        (JSON.stringify(this.options.attributes) || ''));
+MagnetJS.Request.prototype.getCallHash = function(){
+    try{
+        return MagnetJS.CallManager.getCallHash(
+            this.metadata.params.controller,
+            this.metadata.params.name,
+            (JSON.stringify(this.options.attributes) || ''));
+    }catch(e){
+        return false;
+    }
 }
 
 /**
- * Format server response data into client data objects and handle binary data.
+ * Format server response data into client data objects, and handle binary data.
  * @param {*} body The response body.
+ * @param {object} details The response details.
  * @param {function} callback Executes upon completion.
  */
-MagnetJS.Request.prototype.formatResponse = function(body, callback){
+MagnetJS.Request.prototype.formatResponse = function(body, details, callback){
     var params = this.metadata.params;
     var options = this.options.callOptions || {};
     var out = body;
-    if(!options.returnRaw){
+    if(!options.returnRaw && typeof out !== 'undefined'){
         if(params.returnType == 'date'){
             callback(MagnetJS.Utils.ISO8601ToDate(body));
         }else if(options.saveAs && MagnetJS.Utils.isCordova === false){
@@ -1384,6 +1902,10 @@ MagnetJS.Request.prototype.formatResponse = function(body, callback){
             }
         }else if(MagnetJS.Utils.isModelOrCollection(params.returnType) === true){
             callback(this.jsonToModel(params.returnType, body));
+        }else if(MagnetJS.Utils.isDateType(params.returnType)){
+            callback(MagnetJS.Utils.ISO8601ToDate(out));
+        }else if(params.returnType == 'bytearray'){
+            callback(MagnetJS.Utils.base64ToString(out));
         }else if(typeof body == 'string' && body.indexOf('--BOUNDARY--') != -1){
             callback(multipartToObject(body));
         }else{
@@ -1395,24 +1917,28 @@ MagnetJS.Request.prototype.formatResponse = function(body, callback){
 }
 
 /**
- * Convert a JSON object into a MagnetJS Model or Collection if data is compatible.
- * @param {*} returnType The return contentType specified by the controller metadata.
+ * Convert a JSON object into a MagnetJS Model or Collection, if the data is compatible.
+ * @param {*} returnType The return content type specified by the controller metadata.
  * @param {*} body The response body.
- * @param {boolean} [multipart] Enable to skip parsing for multipart/related data.
- * @returns {*}
+ * @param {boolean} [multipart] Indicates whether to enable to skip parsing for multipart/related data.
+ * @returns {*} MagnetJS Model or Collection.
  */
 MagnetJS.Request.prototype.jsonToModel = function(returnType, body, multipart){
     var modelType = getModelType(returnType);
-    if(MagnetJS.Models[modelType] && returnType.indexOf('[]') != -1 && body.page && MagnetJS.Utils.isArray(body.page)){
-        body = new MagnetJS.Collection(modelType, body.page);
+    if(MagnetJS.Models[modelType] && returnType.indexOf('[]') != -1 && body && MagnetJS.Utils.isArray(body)){
+        body = new MagnetJS.Collection(modelType, body);
     }else if(MagnetJS.Models[modelType] && MagnetJS.Utils.isArray(body)){
         for(var i=0;i<body.length;++i)
             body[i] = this.jsonToModel(modelType, body[i]);
     }else if(MagnetJS.Models[modelType] && MagnetJS.Utils.isObject(body) && body['magnet-type']){
         body = new MagnetJS.Models[modelType](body);
         for(var attr in body.attributes)
-            if(body.schema[attr] && body.schema[attr].type && MagnetJS.Utils.isModelOrCollection(body.schema[attr].type))
+            if(body.schema[attr])
                 body.attributes[attr] = this.jsonToModel(getModelType(body.schema[attr].type), body.attributes[attr]);
+    }else if(modelType == 'bytearray'){
+        body = MagnetJS.Utils.base64ToString(body);
+    }else if(MagnetJS.Utils.isDateType(modelType)){
+        body = MagnetJS.Utils.ISO8601ToDate(out);
     }else if(!multipart && typeof body == 'string' && body.indexOf('--BOUNDARY--') != -1){
         var out = multipartToObject(body);
         body = MagnetJS.Utils.isObject(out) ? this.jsonToModel(modelType, out) : out;
@@ -1493,14 +2019,19 @@ function mapToObject(json, id, data){
     }
 }
 // recursively format request data
-function formatModel(data, multipart, model){
+function formatRequest(data, multipart, model, schema){
     for(var attr in data){
         if(data.hasOwnProperty(attr) && data[attr]){
+            if(typeof schema !== 'undefined' && typeof schema[attr] !== 'undefined')
+                schema[attr].type = schema[attr].type.trim();
             if(data[attr].isMagnetModel && data[attr].attributes){
-                formatModel(data[attr].attributes, multipart, data[attr]);
-                data[attr] = data[attr].attributes;
+                data[attr] = formatRequest(data[attr].attributes, multipart, data[attr]);
             }else if(MagnetJS.Utils.isArray(data[attr])){
-                formatModel(data[attr], multipart);
+                data[attr] = formatRequest(data[attr], multipart);
+            }else if(typeof schema !== 'undefined' && schema[attr] && MagnetJS.Utils.isDateType(schema[attr].type)){
+                data[attr] = typeof data[attr] === 'string' ? data[attr] : MagnetJS.Utils.dateToISO8601(data[attr]);
+            }else if(typeof schema !== 'undefined' && schema[attr] && schema[attr].type == 'bytearray'){
+                data[attr] = MagnetJS.Utils.stringToBase64(data[attr]);
             }else if(multipart && typeof model != 'undefined' && model.schema[attr] && (model.schema[attr].type == '_data' || model.schema[attr].type == 'binary')){
                 data[attr] = multipart.add(data[attr].mimeType, data[attr].val);
             }
@@ -1529,12 +2060,13 @@ MagnetJS.Multipart.prototype.close = function(body){
     this.message = '--'+this.boundary+'\r\n'+'Content-Type: application/json\r\n\r\n'+JSON.stringify(body)+'\r\n\r\n'+this.message;
     return this.message;
 }
+
 /**
  * @constructor
  * @memberof MagnetJS
  * @class Model is a client representation of a Mobile App Server Bean. It stores data and performs attribute validations.
  * @param {object} attributes A key-value pair of attributes to be assigned to this Model.
- * @param {boolean} [doValidate] If enabled, validate attributes before set. Default is disabled.
+ * @param {boolean} [doValidate] If enabled, validate attributes before set. Disabled by default.
  */
 MagnetJS.Model = function(attributes, doValidate){
     MagnetJS.Events.create(this);
@@ -1550,16 +2082,16 @@ MagnetJS.Model = function(attributes, doValidate){
 /**
  * Handles basic validation of Model attributes based on schema.
  * @param {object} attributes The attributes to validate.
- * @param {boolean} [isUpdate] If enabled, do not fail validation on missing required fields. Default is disabled.
+ * @param {boolean} [isUpdate] If enabled, do not fail validation on missing required fields. Disabled by default.
  */
 MagnetJS.Model.prototype.validate = function(attributes, isUpdate){
     return MagnetJS.Utils.validate(this.schema, attributes, isUpdate);
 };
 
 /**
- * Set attributes of Model, optionally perform validation before set.
+ * Set the Model attributes, and optionally perform validation beforehand.
  * @param {object} attributes The attributes to set.
- * @param {boolean} [doValidate] If enabled, validate attributes before set. Default is disabled.
+ * @param {boolean} [doValidate] If enabled, validate the attributes before setting. Disabled by default.
  */
 MagnetJS.Model.prototype.set = function(attributes, doValidate){
     if(doValidate){
@@ -1610,14 +2142,14 @@ MagnetJS.Collection.prototype.add = function(input){
 };
 
 /**
- * Clear all Models out of the Collection.
+ * Clear all Models from the Collection.
  */
 MagnetJS.Collection.prototype.clear = function(){
     this.models = [];
 };
 
 /**
- * Return an array of Model objects with attribute matching the specified query.
+ * Retrieve an array of Model objects with attribute matching the specified query.
  * @param {string|object} attributes An object of key-value pairs or an attribute name to match.
  * @param {*} value The attribute to search by.
  */
@@ -1662,10 +2194,10 @@ MagnetJS.Controller = function(name){
  * @param {*} [data] Request data.
  * @param {object} [options] Request options.
  * @param metadata Request metadata.
- * @param {CallOptions} [options.callOptions] A CallOptions object.
- * @param {function} [options.success] Callback to fire after successful request.
- * @param {function} [options.error] Callback to fire after failed request.
- * @returns {MagnetJS.Promise} A MagnetJS.Promise instance.
+ * @param {CallOptions} [options.callOptions] Call options.
+ * @param {function} [options.success] Callback to fire after a successful request.
+ * @param {function} [options.error] Callback to fire after a failed request.
+ * @returns {MagnetJS.Promise} A Promise instance.
  */
 MagnetJS.Method = function(data, options, metadata){
     var me = this;
@@ -1674,6 +2206,8 @@ MagnetJS.Method = function(data, options, metadata){
     options.attributes = MagnetJS.Utils.mergeObj(options.attributes, metadata.attributes);
     var invalid = MagnetJS.Utils.validate(metadata.schema, options.attributes);
     var deferred = new MagnetJS.Deferred();
+    deferred.promise = new MagnetJS.Call();
+    options.call = deferred.promise;
     metadata.params.controller = me._MMSDKName;
     if((options.callOptions && options.callOptions.skipValidation === true) || invalid === false){
         me.invoke(['Set'], metadata.params.name, options, metadata);
@@ -1704,7 +2238,7 @@ MagnetJS.Controllers = {};
 /**
  * This callback is fired on a failed controller call.
  * @typedef {function} ControllerError
- * @param {*} error The error response body or an error message.
+ * @param {*} error The error response body, or an error message.
  * @param {object} details An object containing details of the request, such as HTTP request, response, and status code.
  */
 
@@ -1734,19 +2268,20 @@ MagnetJS.LoginService.connectionStatus = 'NoAuthorization';
  * @param {string} data.password Password.
  * @param {string} [data.authority] Authority.
  * @param {object} options Request options.
- * @param {MagnetJS.CallOptions} [options.callOptions] A CallOptions object.
+ * @param {MagnetJS.CallOptions} [options.callOptions] Call options.
  * @param {ControllerSuccess} [options.success] Success callback. See Type for return values.
  * @param {ControllerError} [options.error] Error callback. See Type for return values.
- * @returns {MagnetJS.Promise} A MagnetJS.Promise instance.
+ * @returns {MagnetJS.Promise} A Promise instance.
  */
 MagnetJS.LoginService.login = function(data, options){
     return MagnetJS.Method.call(this, data, options, {
         params : {
-            name       : 'login',
-            path       : '/login',
-            method     : 'POST',
-            dataType   : 'html',
-            returnType : 'string'
+            name        : 'login',
+            path        : '/login',
+            method      : 'POST',
+            dataType    : 'html',
+            contentType : 'application/x-www-form-urlencoded',
+            returnType  : 'string'
         },
         attributes : {
             authority : 'magnet'
@@ -1771,14 +2306,14 @@ MagnetJS.LoginService.login = function(data, options){
     });
 };
 /**
- * Logout from a Magnet Mobile App Server. Subsequent requests to APIs requiring authentication will
+ * Logout from the Magnet Mobile App Server. Subsequent requests to APIs requiring authentication will
  * fail with 401 HTTP status code (Unauthorized).
  * @memberof MagnetJS.LoginService
  * @param {object} options Request options.
- * @param {MagnetJS.CallOptions} [options.callOptions] A CallOptions object.
+ * @param {MagnetJS.CallOptions} [options.callOptions] Call options.
  * @param {ControllerSuccess} [options.success] Success callback. See Type for return values.
  * @param {ControllerError} [options.error] Error callback. See Type for return values.
- * @returns {MagnetJS.Promise} A MagnetJS.Promise instance.
+ * @returns {MagnetJS.Promise} A Promise instance.
  */
 MagnetJS.LoginService.logout = function(options){
     return MagnetJS.Method.call(this, null, options, {
@@ -1792,46 +2327,53 @@ MagnetJS.LoginService.logout = function(options){
     });
 };
 /**
- * Log in to a Magnet Mobile App Server using stored credentials. If the credentials are missing, the error callback
+ * Log in to the Magnet Mobile App Server using the stored login credentials. If the credentials are missing, the error callback
  * will be fired with a response of "invalid-credentials".
  * @memberof MagnetJS.LoginService
  * @param {object} options Request options.
- * @param {MagnetJS.CallOptions} [options.callOptions] A CallOptions object.
+ * @param {MagnetJS.CallOptions} [options.callOptions] Call options.
  * @param {ControllerSuccess} [options.success] Success callback. See Type for return values.
  * @param {ControllerError} [options.error] Error callback. See Type for return values.
  */
 MagnetJS.LoginService.loginWithSavedCredentials = function(options){
-    var credentials = MagnetJS.Storage.get(this.store) || {};
-    if(credentials.name && credentials.password && credentials.endpointUrl){
-        MagnetJS.set({
-            endpointUrl : credentials.endpointUrl
-        });
-        delete credentials.endpointUrl;
-        this.login(credentials, {
-            success : options.success,
-            error   : options.error
-        });
-    }else{
-        if(typeof options.error === typeof Function) options.error('invalid-credentials');
-    }
+    var me = this;
+    MagnetJS.Storage.get(me.store, null, function(records){
+        var credentials = (records && records.length > 0) ? MagnetJS.Utils.getValidJSON(MagnetJS.Utils.base64ToString(records[0].hash)) : {};
+        if(credentials.name && credentials.password && credentials.endpointUrl && credentials.authority){
+            MagnetJS.set({
+                endpointUrl : credentials.endpointUrl
+            });
+            delete credentials.endpointUrl;
+            me.login(credentials, {
+                success : options.success,
+                error   : options.error
+            });
+        }else{
+            if(typeof options.error === typeof Function) options.error('invalid-credentials');
+        }
+    }, options.error);
 }
 
 MagnetJS.LoginService.on('MMSDKComplete', function(methodName, result, details){
     if(methodName == 'login' && result == 'SUCCESS'){
         MagnetJS.LoginService.connectionStatus = 'Authorized';
         MagnetJS.LoginService.invoke(['Authorized'], result, details);
-        if(MagnetJS.Utils.isMobile && MagnetJS.Config.storeCredentials === true)
-            MagnetJS.Storage.set(this.store, MagnetJS.Utils.mergeObj({
+        if(MagnetJS.Utils.isMobile && MagnetJS.Config.storeCredentials === true){
+            var body = JSON.parse('{"'+decodeURI(details.body).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"') + '"}');
+            MagnetJS.Storage.createTableIfNotExist(this.store, {
+                hash : 'TEXT'
+            }, {
+                hash : MagnetJS.Utils.stringToBase64(JSON.stringify(MagnetJS.Utils.mergeObj({
                 endpointUrl : MagnetJS.Config.endpointUrl
-            }, details.body));
+            }, body)))}, true);
+        }
         if(MagnetJS.Utils.isNode && details.info.response.headers['set-cookie'])
             MagnetJS.Transport.Headers.Cookie = details.info.response.headers['set-cookie'][0];
     }else if(methodName == 'logout'){
         MagnetJS.LoginService.connectionStatus = 'NoAuthorization';
         MagnetJS.LoginService.invoke(['NoAuthorization'], result, details);
-        if(MagnetJS.Utils.isMobile) MagnetJS.Storage.remove(this.store);
+        if(MagnetJS.Utils.isMobile) MagnetJS.Storage.clearTable(this.store);
         if(MagnetJS.Utils.isNode) delete MagnetJS.Transport.Headers.Cookie;
-        delete MagnetJS.Transport.credentials;
     }
 });
 
@@ -1847,7 +2389,7 @@ var Connection = Connection || {
 }
 
 /**
- * Catches errors due to an OAuthLoginException and displays OAuth dialog for user to enter their credentials.
+ * Catches errors due to an OAuthLoginException, and displays an OAuth dialog prompting the user to enter their credentials.
  * After a successful authentication, the OAuthHandler will resubmit the original request and return the payload
  * in the success callback.
  * @fires MagnetJS.OAuthHandler#OAuthLoginExceptionReceived
@@ -1877,14 +2419,14 @@ MagnetJS.OAuthHandler = {
  * This event is fired when an OAuthLoginException has been received during a controller call.
  * @event MagnetJS.OAuthHandler#OAuthLoginExceptionReceived
  * @type {object}
- * @property {MagnetJS.Controller} instance The controller instance which resulted in the OAuthLoginException.
+ * @property {MagnetJS.Controller} instance The controller instance that resulted in the OAuthLoginException.
  * @property {object} options The request options.
  */
 /**
  * This event is fired when an OAuth flow has completed.
  * @event MagnetJS.OAuthHandler#OAuthFlowComplete
  * @type {object}
- * @property {MagnetJS.Controller} instance The controller instance which resulted in the OAuthLoginException.
+ * @property {MagnetJS.Controller} instance The controller instance that resulted in the OAuthLoginException.
  * @property {object} options The request options.
  */
 MagnetJS.Events.create(MagnetJS.OAuthHandler);
@@ -1922,182 +2464,268 @@ MagnetJS.OAuthHandler.on('OAuthLoginException', function(instance, options, meta
  * @memberof MagnetJS
  */
 MagnetJS.CallManager = {
-    queuesName       : 'MMSDKReliableQueues',
-    defaultQueueName : 'MMSDKReliableDefaultQueue',
+    queueTableName   : 'MMSDKReliableQueues',
+    defaultQueueName : 'MMSDKDefault',
+    queues           : {},
     cache            : {}
+};
+// retrieve reliable callOptions and store to memory
+function storeCache(){
+    MagnetJS.Storage.get(MagnetJS.CallManager.queueTableName, null, function(records){
+        for(var i=0;i<records.length;++i){
+            MagnetJS.CallManager.queues[records[i].queueName] = MagnetJS.CallManager.queues[records[i].queueName] || [];
+            MagnetJS.CallManager.queues[records[i].queueName].push({
+                id          : records[i].id,
+                callId      : records[i].callId,
+                callOptions : MagnetJS.Utils.getValidJSON(records[i].callOptions),
+                options     : MagnetJS.Utils.getValidJSON(records[i].options),
+                metadata    : MagnetJS.Utils.getValidJSON(records[i].metadata),
+                queueName   : records[i].queueName
+            });
+        }
+    });
 }
-// create stores if they do not already exist.
-MagnetJS.CallManager.queues = MagnetJS.Storage.getOrCreate(MagnetJS.CallManager.queuesName, {});
-MagnetJS.CallManager.defaultQueue = MagnetJS.Storage.getOrCreate(MagnetJS.CallManager.defaultQueueName, []);
-
+// create a callOptions store if it does not already exist.
+MagnetJS.Storage.createTableIfNotExist(MagnetJS.CallManager.queueTableName, {
+    callId      : 'TEXT',
+    callOptions : 'TEXT',
+    options     : 'TEXT',
+    metadata    : 'TEXT',
+    queueName   : 'TEXT'
+}, null, false, storeCache);
 /**
  * Clear all cached results.
- * @param {string} callId A queue name.
+ * @param {string} [callId] Optionally specify a call ID to remove.
  */
 MagnetJS.CallManager.clearCache = function(callId){
     if(callId && this.cache[callId]) delete this.cache[callId];
     else this.cache = {};
-}
+};
 /**
  * Cancel all pending reliable calls.
- * @param {string} [queueName] A queue name.
+ * @param {string} [queueName] The queue name.
+ * @param {function} [callback] Fires upon completion.
  */
-MagnetJS.CallManager.cancelAllPendingCalls = function(queueName){
+MagnetJS.CallManager.cancelAllPendingCalls = function(queueName, callback){
     if(queueName && this.queues[queueName]){
         delete this.queues[queueName];
+        MagnetJS.Storage.remove(this.queueTableName, {
+            queueName : queueName
+        }, callback);
     }else{
         this.queues = {};
-        this.defaultQueue = [];
+        MagnetJS.Storage.clearTable(this.queueTableName, callback);
     }
-    MagnetJS.Storage.set(this.queuesName, this.queues);
-    MagnetJS.Storage.set(this.defaultQueueName, this.defaultQueue);
-}
+};
 /**
  * Shortcut for calling cancelAllPendingCalls and clearCache.
+ * @param {function} [callback] Fires upon completion.
  */
-MagnetJS.CallManager.reset = function(){
-    this.cancelAllPendingCalls();
+MagnetJS.CallManager.reset = function(callback){
     this.clearCache();
-}
+    this.cancelAllPendingCalls(undefined, callback);
+};
 /**
  * Triggers all non-empty thread queues to be awaken (if asleep) to re-attempt processing.
+ * @param {function} [callback] Fires upon completion.
  */
-MagnetJS.CallManager.run = function(){
-    var me = this;
-    MagnetJS.Deferred.all(function(){
-        var deferred = new MagnetJS.Deferred();
-        me.runQueue('defaultQueue', undefined, function(){
-            deferred.resolve();
-        });
-        return deferred.promise;
-    }, function(){
-        var deferred = new MagnetJS.Deferred();
-        var ctr = 0;
+MagnetJS.CallManager.run = function(callback){
+    var me = this, ctr = 0, deletedIds = [];
+    function done(){
+        if(deletedIds.length > 0)
+            MagnetJS.Storage.remove(me.queueTableName, {
+                id : deletedIds
+            }, callback);
+    }
+    if(MagnetJS.Utils.isEmptyObject(me.queues)){
+        done();
+    }else{
         for(var queue in me.queues){
             if(me.queues.hasOwnProperty(queue)){
                 ++ctr;
-                me.runQueue('queues', queue, function(){
-                    if(--ctr == 0) deferred.resolve();
+                me.runQueue(queue, [], function(ids){
+                    setTimeout(function(){
+                        deletedIds = deletedIds.concat(ids);
+                        if(--ctr == 0) done();
+                    }, 1);
                 });
             }
         }
-        if(ctr == 0) deferred.resolve();
-        return deferred.promise;
-    }).then(function(){
-        MagnetJS.Storage.set(me.queuesName, me.queues);
-        MagnetJS.Storage.set(me.defaultQueueName, me.defaultQueue);
-    });
-}
+    }
+};
 /**
- * Iterates through an array of reliable call requests and performs each request in FIFO synchronously until the array is empty or a constraint is not met.
- * @param {string} storeName Name of the store.
- * @param {string} [queueName] The name of the queueName if applicable.
+ * Removes a call from the ReliableCallOptions queue.
+ * @param {string} callId The ID of the call to remove.
+ * @param {function} [callback] Fires upon completion.
+ */
+MagnetJS.CallManager.removeCallFromQueue = function(callId, callback){
+    for(var queue in this.queues){
+        if(this.queues.hasOwnProperty(queue)){
+            for(var i=0;i<this.queues[queue].length;++i)
+                if(this.queues[queue][i].callId === callId){
+                    this.queues[queue].splice(i, 1);
+                    break;
+                }
+        }
+    }
+    callback();
+};
+/**
+ * Dispose all reliable calls having SUCCESS or FAILED state.
+ * @param {function} [clearCache] Enable removal of the calls from the cache.
+ * @param {function} [callback] Fires upon success.
+ * @param {function} [failback] Fires upon failure.
+ */
+MagnetJS.CallManager.disposeAllDoneCalls = function(clearCache, callback, failback){
+    var ids = [];
+    for(var callId in this.cache)
+        ids.push(callId);
+    MagnetJS.CallManager.requestCorrelationCleanup(ids, function(data, details){
+        if(clearCache === true) MagnetJS.CallManager.clearCache();
+        callback(data, details);
+    }, failback);
+};
+/**
+ * Retrieve a Call instance by its unique ID. It is for reliable calls only. May return null if the ID is invalid, the call is timed out, or the asynchronous call was done,
+ * which is defined as its cached result becomes obsoleted or overwritten by another invocation.
+ * @param {string} callId The call ID to remove.
+ * @returns {object} The Call instance to be retrieved.
+ */
+MagnetJS.CallManager.getCall = function(callId){
+    var call;
+    for(var queue in this.queues){
+        if(this.queues.hasOwnProperty(queue)){
+            for(var i=0;i<this.queues[queue].length;++i)
+                if(this.queues[queue][i].callId === callId){
+                    call = this.queues[queue][i].options.call;
+                    break;
+                }
+        }
+    }
+    return call;
+};
+/**
+ * Iterates through an array of reliable call requests, and performs each request in FIFO synchronously until the array is empty or a constraint is not met.
+ * @param {string} [queueName] The queue name, if applicable.
+ * @param {array} [ids] An array of call option IDs that have been completed.
  * @param {function} done Executes after the queue is drained or a constraint is not met.
  */
-MagnetJS.CallManager.runQueue = function(storeName, queueName, done){
+MagnetJS.CallManager.runQueue = function(queueName, ids, done){
     var me = this;
-    var store = queueName ? this[storeName][queueName] : this[storeName];
+    var store = me.queues[queueName];
     if(MagnetJS.Utils.isArray(store) && store.length > 0){
         if(me.isExpired(store[0].callOptions.requestAge) === true){
+            ids.push(store[0].id);
             store.shift();
-            me.runQueue(storeName, queueName, done);
+            me.runQueue(queueName, ids, done);
         }else if(me.isConstraintMet(store[0].callOptions.constraint)){
             var req = new MagnetJS.Request(undefined, store[0].options, store[0].metadata);
             req.send(function(result, details){
                 MagnetJS.ReliableCallListener.invoke(['onSuccess', store[0].callOptions.success], store[0].metadata.params, result, details);
+                ids.push(store[0].id);
                 store.shift();
-                me.runQueue(storeName, queueName, done);
+                me.runQueue(queueName, ids, done);
             }, function(e, details){
                 MagnetJS.ReliableCallListener.invoke(['onError', store[0].callOptions.error], store[0].metadata.params, e, details);
+                ids.push(store[0].id);
                 store.shift();
-                me.runQueue(storeName, queueName, done);
+                me.runQueue(queueName, ids, done);
             });
         }else{
-            if(queueName) this[storeName][queueName] = store;
-            else this[storeName] = store;
-            done();
+            me.queues[queueName] = store;
+            done(ids);
         }
     }else{
-        if(queueName) delete me[storeName][queueName];
-        else me[storeName] = [];
-        done();
+        delete me.queues[queueName];
+        done(ids);
     }
-}
+};
 /**
  * Cache the given request object.
  * @param {string} callId A unique identifier for this request.
  * @param {object} options The request options to cache.
  * @param {object} metadata The request metadata to cache.
+ * @param {function} [callback] Executes after the request object is set.
  */
-MagnetJS.CallManager.setRequestObject = function(callId, options, metadata){
-    var queueName = options.callOptions.queueName && options.callOptions.queueName != '' ? options.callOptions.queueName : false;
-    var store = queueName ? this.queues[queueName] : this.defaultQueue;
+MagnetJS.CallManager.setRequestObject = function(callId, options, metadata, callback){
+    var queueName = (options.callOptions.queueName && options.callOptions.queueName != '') ? options.callOptions.queueName : this.defaultQueueName;
+    var store = this.queues[queueName];
     store = store || [];
     store.push({
         callId      : callId,
         callOptions : options.callOptions,
         options     : options,
-        metadata    : metadata
+        metadata    : metadata,
+        queueName   : queueName
     });
-    delete store[store.length-1].options.callOptions;
-    if(queueName){
-        this.queues[queueName] = store;
-        MagnetJS.Storage.set(this.queuesName, this.queues);
-    }else{
-        this.defaultQueue = store;
-        MagnetJS.Storage.set(this.defaultQueueName, this.defaultQueue);
-    }
-}
+    var callObj = {
+        callId      : store[store.length-1].callId,
+        callOptions : JSON.stringify(store[store.length-1].callOptions),
+        options     : JSON.stringify(store[store.length-1].options),
+        metadata    : JSON.stringify(store[store.length-1].metadata),
+        queueName   : store[store.length-1].queueName
+    };
+    delete callObj.options.callOptions;
+    this.queues[queueName] = store;
+    MagnetJS.Storage.create(this.queueTableName, callObj, callback);
+};
 /**
- * Set cached value of the given callId.
+ * Set the cached value of the specified call ID.
  * @param {string} callId A unique identifier for this request.
+ * @param {string} callHash A hash created using the request parameters and body.
  * @param {CallOptions} callOptions The CallOptions object instance.
  * @param {*} result The result data to cache.
  * @param {object} details The details object to cache.
  */
-MagnetJS.CallManager.setCacheObject = function(callId, callOptions, result, details){
+MagnetJS.CallManager.setCacheObject = function(callId, callHash, callOptions, result, details){
     this.cache[callId] = {
         callOptions : callOptions,
+        callHash    : callHash,
         result      : result,
         details     : details || {}
     };
-}
+};
 /**
- * Get cached value of the given callId if the cached value exists and has not expired.
- * @param {string} callId A callId.
- * @returns {object} Cached value or undefined if cached value has expired or is not available.
+ * Retrieve the cached value of the specified call ID if the cached value exists and has not expired.
+ * @param {string} callHash A hashed string to match with a cached call.
+ * @returns {object} The cached value, or undefined if the cached value has expired or is not available.
  */
-MagnetJS.CallManager.getCache = function(callId){
-    if(this.cache[callId]
-        && this.isExpired(this.cache[callId].callOptions.cacheAge)
-        && (this.cache[callId].callOptions.ignoreAgeIfOffline === false
-        || this.getConnectionState() != 'NONE'))
-        delete this.cache[callId];
-    return this.cache[callId];
-}
+MagnetJS.CallManager.getCacheByHash = function(callHash){
+    var cache;
+    for(var callId in this.cache){
+        if(this.cache[callId].callHash === callHash){
+            if(this.isExpired(this.cache[callId].callOptions.cacheAge)
+                && (this.cache[callId].callOptions.ignoreAgeIfOffline === false
+                || this.getConnectionState() != 'NONE'))
+                delete this.cache[callId];
+            cache = this.cache[callId];
+        }
+    }
+    return cache;
+};
 /**
- * Generate a callId given arbitrary string arguments. Uses the CryptoJS MD5 library to generate a hash or falls back to encodeURIComponent.
+ * Generate a call hash given arbitrary string arguments. Uses the CryptoJS MD5 library to generate a hash, or falls back to encodeURIComponent.
  * @param {string} An arbitrary number of string arguments to convert into a hash.
- * @returns {string}
+ * @returns {string} A call hash.
  */
-MagnetJS.CallManager.getCallId = function(){
+MagnetJS.CallManager.getCallHash = function(){
     var args = [].slice.call(arguments).join('|');
     return CryptoJS ? CryptoJS.MD5(args).toString() : encodeURIComponent(args);
-}
+};
 /**
  * Get the current time in seconds.
- * @returns {number}
+ * @returns {number} The current time in seconds.
  */
 MagnetJS.CallManager.getTimeInSeconds = function(){
     return Math.round(new Date().getTime() / 1000);
-}
+};
 /**
  * Determines whether the given age is expired.
- * @returns {boolean}
+ * @returns {boolean} true if the given age is expired, false otherwise.
  */
 MagnetJS.CallManager.isExpired = function(age){
     return this.getTimeInSeconds() >= age;
-}
+};
 /**
  * Set properties of a CallOptions object.
  * @param {CallOptions} [me] An instance of the CallOptions object. If not specified, "this" in the current scope is used instead.
@@ -2110,41 +2738,31 @@ MagnetJS.CallManager.set = function(me, properties){
             if(key == 'cacheTimeout') me.setCacheTimeout(properties[key]);
             else if(key == 'requestTimeout' && me.setRequestTimeout) me.setRequestTimeout(properties[key]);
             else me[key] = properties[key];
-}
+};
 /**
- * Returns whether or not the given constraint is met.
+ * Determines whether the specified constraint is met.
  * @param {array} constraint The constraint requirement object.
- * @returns {boolean} Indicates whether the constraint is met.
+ * @returns {boolean} True if the constraint is met, false otherwise.
  */
 MagnetJS.CallManager.isConstraintMet = function(constraint){
     if(constraint && MagnetJS.Utils.isArray(constraint)){
-        var validNetwork, validGeo = true, networkState = this.getConnectionState(), geo = MagnetJS.Geolocation.current;
+        var networkTypes = [], validGeo = true, validCustom = true, networkState = this.getConnectionState(), geo = MagnetJS.Geolocation.current;
         for(var i=0;i<constraint.length;++i){
-            if(typeof constraint[i] == 'string' && constraint[i] == networkState){
-                validNetwork = true;
-            }else if(MagnetJS.Utils.isObject(constraint[i])){
-                if(MagnetJS.Geolocation.state === 'OK'){
-                    if(MagnetJS.Geolocation.isWithinBoundaries(constraint[i], {
-                        lat : geo.coords.latitude,
-                        lng : geo.coords.longitude
-                    }) === false)
-                        validGeo = false;
-                }else{
-                    validGeo = false;
-                }
-            }
+            if(typeof constraint[i] == 'string')
+                networkTypes.push(constraint[i]);
+            else if(typeof constraint[i] === typeof Function)
+                validCustom = constraint[i]();
         }
-        return (validNetwork === true && validGeo === true);
+        return ((networkTypes.length > 0 ? networkTypes.indexOf(networkState) != -1 : true) && validGeo === true && validCustom === true);
     }else{
         return true;
     }
-}
+};
 /**
- * Returns the current network connection state through javascript-native bridge.
+ * Returns the current network connection state through the javascript-native bridge.
  */
 MagnetJS.CallManager.getConnectionState = function(){
     var state = 'WIFI';
-    // phonegap detection
     if(MagnetJS.Utils.isObject(navigator) && navigator.connection && navigator.connection.type){
         var connection = navigator.connection.type;
         switch(connection){
@@ -2159,25 +2777,165 @@ MagnetJS.CallManager.getConnectionState = function(){
         }
     }
     return state;
-}
+};
+/**
+ * Dispose of completed call IDs on the server.
+ *
+ */
+MagnetJS.CallManager.requestCorrelationCleanup = function(ids, callback, failback){
+    MagnetJS.Transport.request(null, {
+        method : 'GET',
+        path   : '/_magnet_cc?ids='+(typeof ids === 'string' ? ids : ids.join(','))
+    }, {
+        call : new MagnetJS.Call()
+    }, callback, failback);
+};
 
 /**
- * A reliable call listener which dispatches success and error events provided by a ReliableCallOptions object. To execute a callback
+ * This interface represents an asynchronous invocation to a controller. An instance of the Call is typically returned by a method call from any Controller
+ * implementation. If the options are not specified in the Controller subclass method call, a fail-fast asynchronous call will be assumed.
+ * @augments MagnetJS.Promise
+ * @constructor
+ * @memberof MagnetJS
+ */
+MagnetJS.Call = function(){
+    /**
+     * A system generated unique ID for this call.
+     * @type {string}
+     */
+    this.callId;
+    /**
+     * A custom opaque token provided by the caller.
+     * @type {string}
+     */
+    this.token;
+    /**
+     * The last cached time of the result. It is available only if the call has completed.
+     * @type {Date}
+     */
+    this.cachedTime;
+    /**
+     * Indicates whether the result was retrieved from the cache.
+     * @type {boolean}
+     */
+    this.isResultFromCache;
+    /**
+     * The result returned by the call. This property is undefined if the call failed.
+     * @type {*}
+     */
+    this.result;
+    /**
+     * The error, if any, that occurred during execution of the call. An undefined error value indicates that the call completed successfully.
+     * @type {*}
+     */
+    this.resultError;
+    /**
+     * An object containing details of the request.
+     * @type {object}
+     */
+    this.details;
+    this.state = MagnetJS.CallState.INIT;
+    MagnetJS.Promise.apply(this, arguments);
+};
+MagnetJS.Call.prototype = new MagnetJS.Promise();
+MagnetJS.Call.prototype.constructor = MagnetJS.Call;
+/**
+ * Set parameters on the Call using the specified CallOptions object.
+ * @param {MagnetJS.CallOptions} callOptions A CallOptions object.
+ */
+MagnetJS.Call.prototype.setOptions = function(callOptions){
+    this.token = callOptions.token;
+    this.callId = callOptions.callId;
+    this.isReliable = callOptions.isReliable;
+};
+/**
+ * Cancel a queued or executing call. If the call has been disposed, completed, cancelled, or unable to cancel, it will return false. Upon successful completion, this
+ * call object will be disposed too.
+ * @param {function} [callback] Fires after completion.
+ */
+MagnetJS.Call.prototype.cancel = function(callback){
+    if(this.state != MagnetJS.CallState.SUCCESS && this.state != MagnetJS.CallState.FAILED){
+        if(this.transportHandle) this.transportHandle.abort();
+        this.state = MagnetJS.CallState.CANCELLED;
+        MagnetJS.CallManager.removeCallFromQueue(this.callId, function(){
+            if(typeof callback == typeof Function) callback(true);
+        });
+    }else{
+        if(typeof callback == typeof Function) callback(false);
+    }
+};
+/**
+ * Dispose this Call, optionally clearing its result from cache. The call must be in SUCCESS or FAILED state. All resources used by this Call will be released. To dispose a
+ * queued or executing call, it must be cancelled first.
+ * @param {function} [clearCache] Enable removing the call from the cache.
+ * @param {function} [callback] Fires upon success.
+ * @param {function} [failback] Fires upon failure.
+ */
+MagnetJS.Call.prototype.dispose = function(clearCache, callback, failback){
+    var callId = this.callId;
+    if(callId && (this.state === MagnetJS.CallState.FAILED || this.state === MagnetJS.CallState.SUCCESS)){
+        MagnetJS.CallManager.requestCorrelationCleanup(callId, function(data, details){
+            if(clearCache == true) MagnetJS.CallManager.clearCache(callId);
+            callback(data, details);
+        }, failback);
+    }else{
+        if(typeof failback === typeof Function) failback('invalid-call-state');
+    }
+};
+/**
+ * A set of constants used by a MagnetJS.Call object to determine the current state of the call.
+ * @memberof MagnetJS
+ * @namespace CallState
+ */
+MagnetJS.CallState = {
+    /**
+     * The call has been initialized but the request has not yet started.
+     * @type {string}
+     */
+    INIT       : 'init',
+    /**
+     * The call is in progress.
+     * @type {string}
+     */
+    EXECUTING  : 'executing',
+    /**
+     * The call is in a reliable queue.
+     * @type {string}
+     */
+    QUEUED     : 'queued',
+    /**
+     * The call has been cancelled.
+     * @type {string}
+     */
+    CANCELLED  : 'cancelled',
+    /**
+     * The call has completed successfully.
+     * @type {string}
+     */
+    SUCCESS    : 'success',
+    /**
+     * The call has failed.
+     * @type {string}
+     */
+    FAILED     : 'failed'
+}
+/**
+ * A reliable call listener that dispatches success and error events provided by a ReliableCallOptions object. To execute a callback
  * of name "reliableSuccess" after a ReliableCallOptions request, bind an event to the ReliableCallListener: MagnetJS.ReliableCallListener.on('reliableSuccess', function(){});
- * To unbind an event, MagnetJS.ReliableCallListener.unbind('reliableSuccess');
+ * To unbind an event, invoke MagnetJS.ReliableCallListener.unbind('reliableSuccess');
  * @memberof MagnetJS
  * @namespace ReliableCallListener
  */
 MagnetJS.ReliableCallListener = {
     /**
-     * Bind a callback function associated with the given callback ID to fire when it is invoked after a ReliableCallOptions request.
-     * @param callbackId ID of the callback.
+     * Bind a callback function associated with the specified callback ID to fire when it is invoked after a ReliableCallOptions request.
+     * @param callbackId The callback ID.
      * @param callback A callback function.
      */
     on     : function(callbackId, callback){},
     /**
-     * Unbind the callback functions associated with a given callback ID.
-     * @param callbackId ID of the callback.
+     * Unbind the callback functions associated with the specified callback ID.
+     * @param callbackId The callback ID.
      */
     unbind : function(callbackId){}
 };
@@ -2191,20 +2949,30 @@ MagnetJS.Events.create(MagnetJS.ReliableCallListener);
  */
 MagnetJS.CallOptions = function(options){
     /**
-     * Invoke the call only if this constraint is met. This means Async (non-reliable) calls will fail fast. Reliable calls will wait.
+     * Invoke the call only if this constraint is met. This means asynchronous (non-reliable) calls will fail fast. Reliable calls will wait.
      * @property {string}
      */
-    this.constraint = '';
+    this.callId = MagnetJS.Utils.getGUID();
+    /**
+     * Invoke the call only if this constraint is met. This means asynchronous (non-reliable) calls will fail fast. Reliable calls will wait.
+     * @property {string}
+     */
+    this.constraint;
     /**
      * Optional. A user can set a custom opaque token for this call.
      * @type {string}
      */
-    this.token = '';
+    this.token;
     /**
-     * The epoch time in seconds when the cached value will expire. 0 to discard the cache, > 0 to use the cache if the age is still valid. This value can be set easily by specifying a timeout with CallOptions.setCacheTimeout().
+     * The epoch time in seconds when the cached value will expire. Specify 0 to discard the cache, or a value greater than 0 to use the cache if the age is still valid. This value can be set by specifying a timeout with CallOptions.setCacheTimeout().
      * @type {number}
      */
     this.cacheAge = 0;
+    /**
+     * An object containing the HTTP header name and value pairs to send in the request. For example, the Content-Type header can be set like this: var opts = new MagnetJS.CallOptions({headers:{"Content-Type":"application/json"}});
+     * @type {boolean}
+     */
+    this.headers = undefined;
     /**
      * Ignore the timeout in offline mode.
      * @type {boolean}
@@ -2218,17 +2986,34 @@ MagnetJS.CallOptions = function(options){
     if(options) MagnetJS.CallManager.set(this, options);
 }
 /**
- * Specify the length of time (seconds) before the cached value expires. If this option is specified, the call will attempt to use the cached value and the response will always be cached. If not specified, the cached value will be discarded and the response will not be cached.
- * @param {number} [timeout] Number of seconds until cache expires. 0 to discard the cache, > 0 to use the cache if the age is still valid.
- * @param {boolean} [ignoreAgeIfOffline] indicates whether or not to use the cached value in an off-line mode despite of its age. Default is false.
+ * Specify the length of time (seconds) before the cached value expires. If this option is specified, the call will attempt to use the cached value, and the response will always be cached. If not specified, the cached value will be discarded and the response will not be cached.
+ * @param {number} [timeout] The number of seconds until the cache expires. Specify 0 to discard the cache, or a value greater than 0 to use the cache if the age is still valid.
+ * @param {boolean} [ignoreAgeIfOffline] Indicates whether to use the cached value in an offline mode despite its age. The default is false.
  */
 MagnetJS.CallOptions.prototype.setCacheTimeout = function(timeout, ignoreAgeIfOffline){
     this.cacheAge = timeout ? MagnetJS.CallManager.getTimeInSeconds() + timeout : 0;
     this.ignoreAgeIfOffline = ignoreAgeIfOffline;
 }
+/**
+ * Set an HTTP header to be used by this CallOptions object.
+ * @param {string} name The name of the HTTP header.
+ * @param {string} value The value of the HTTP header.
+ */
+MagnetJS.CallOptions.prototype.addTag = function(name, value){
+    this.headers = this.headers || {};
+    this.headers[name] = value;
+}
+/**
+ * Set one or more HTTP headers to be used by this CallOptions object.
+ * @param {object} tags An object containing key-value pairs of HTTP headers to add to the CallOptions object.
+ */
+MagnetJS.CallOptions.prototype.addTags = function(tags){
+    this.headers = this.headers || {};
+    MagnetJS.Utils.mergeObj(this.headers, tags);
+}
 
 /**
- * Options for an asynchronous call. An asynchronous call allows the caller to use the cached value and to impose a restriction when the call can be invoked. These types of options are only applicable when the user is seen as “online” and connected to the server. If you wish to submit operations while in an “offline” state, or there is a need for more reliable long-lasting durable operations then use MMReliableCallOptions instead. If no options are specified, async (unreliable) call is assumed.
+ * Options for an asynchronous call. An asynchronous call allows the caller to use the cached value and impose a restriction on when the call can be invoked. These types of options are only applicable when the user is online and connected to the server. If you would like to submit operations while offline or need more reliable, long-lasting durable operations, use ReliableCallOptions instead. If no options are specified, an asynchronous (unreliable) call is assumed.
  * @augments MagnetJS.CallOptions
  * @constructor
  * @memberof MagnetJS
@@ -2240,23 +3025,30 @@ MagnetJS.AsyncCallOptions.prototype = new MagnetJS.CallOptions();
 MagnetJS.AsyncCallOptions.prototype.constructor = MagnetJS.AsyncCallOptions;
 
 /**
- * Options for a reliable asynchronous call. A reliable asynchronous call allows the caller to use the cached value, to queue up a call in a persistent storage even if the caller is offline at submission time, to execute the calls in sequential manner, to impose a restriction when the call can be invoked and to specify a timeout for this call.
+ * Options for a reliable asynchronous call. A reliable asynchronous call allows the caller to:
+ <ul>
+   <li>use the cached value</li>
+   <li>queue a call in persistent storage even if the caller is offline at submission time</li>
+   <li>execute the calls in a sequential manner</li>
+   <li>impose a restriction on when the call can be invoked</li>
+   <li>specify a timeout for the call</li>
+ </ul>
  * @augments MagnetJS.CallOptions
  * @constructor
  */
 MagnetJS.ReliableCallOptions = function(){
     /**
-     * Place a call on a queue specified by a queue name. The pending calls on a queue will be invoked sequentially. If concurrent invocation is wanted, the calls should be put on multiple reliableQueues.
+     * Place a call on the specified queue.  The pending calls on the queue will be invoked sequentially. When using concurrent invocation, place the calls on multiple reliable queues.
      * @type {string}
      */
     this.queueName;
     /**
-     * The timeout in milliseconds the server should hold on to the result (max of request and resposne timeouts).
+     * The time, in milliseconds, the server should retain to the result (the greater of the request and response timeouts).
      * @type {number}
      */
     this.serverTimeout = 0;
     /**
-     * The epoch time in seconds when the request will expire. This value can be set easily by specifying a timeout with ReliableCallOptions.setRequestTimeout().
+     * The epoch time, in seconds, until the request will expire. This value can be easily set  by specifying a timeout using ReliableCallOptions.setRequestTimeout().
      * @type {number}
      */
     this.requestAge = 0;
@@ -2275,19 +3067,14 @@ MagnetJS.ReliableCallOptions = function(){
      * @type {boolean}
      */
     this.isReliable = true;
-    /**
-     * A correlation id to be sent to the server.
-     * @type {string}
-     */
-    this.correlationId = MagnetJS.Utils.getGUID();
     MagnetJS.CallOptions.apply(this, arguments);
 };
 MagnetJS.ReliableCallOptions.prototype = new MagnetJS.CallOptions();
 MagnetJS.ReliableCallOptions.prototype.constructor = MagnetJS.ReliableCallOptions;
 
 /**
- * Specify the length of time (seconds) before the request expires.
- * @param {number} timeout Number of seconds before the request expires. 0 to discard the request, > 0 to use the request if the age is still valid.
+ * Specify the time, in seconds, until the request expires.
+ * @param {number} timeout The number of seconds before the request expires. Specify 0 to discard the request; specify a value greater than 0 to use the request if the age is still valid.
  */
 MagnetJS.ReliableCallOptions.prototype.setRequestTimeout = function(timeout){
     this.serverTimeout = (timeout * 1000) + (30 * 1000);
@@ -2302,20 +3089,20 @@ MagnetJS.ReliableCallOptions.prototype.setRequestTimeout = function(timeout){
  */
 MagnetJS.Constraints = {
     /**
-     * The device must have a Wifi connection available to meet this constraint.
+     * The device must have a Wifi connection available to satisfy this constraint.
      */
     Wifi : ['WIFI'],
     /**
-     * The device must have either a Wifi or cellular connection available to meet this constraint.
+     * The device must have a cellular connection available to satisfy this constraint.
      */
-    Mobile : ['CELL', 'WIFI'],
+    WWAN : ['CELL'],
     /**
      * Create a custom constraint. A user-defined function can be bound to this constraint to provide custom
      * validation of whether a constraint is met. Optionally, network constraints can be specified to further
      * refine the constraint.
      * @param {string} name The name of the constraint to be created.
      * @param {array} [definitions] An array of constraints. For example, ['WIFI', 'CELL'] would specify that the
-     * constraint will be met if the device is on either a Wifi or cellular network connection. A MagnetJS.Geostore
+     * constraint will be met if the device is on a Wifi or cellular network connection. A MagnetJS.Geostore
      * object can be passed in the array. If the constraint contains a Geostore, the controller call will only execute
      * if the current geolocation of the device is within the boundaries of the Geostore object.
      */
@@ -2325,7 +3112,7 @@ MagnetJS.Constraints = {
 };
 
 /**
- * A class designed to simplify storage of binary data from controller requests to the filesystem in a Phonegap app.
+ * A class designed to simplify storage of binary data from controller requests to the file system in a Phonegap app.
  * @memberof MagnetJS
  * @namespace FileManager
  * @ignore
@@ -2336,20 +3123,19 @@ MagnetJS.FileManager = {
      */
     fileSystem : null,
     /**
-     * @property {string} filePath File system path to Documents directory since it is a different path for each file system.
+     * @property {string} filePath File system path to the Documents directory, since it is a different path for each file system.
      */
     filePath   : null,
     /**
-     * @property {string|object} status Status of the fileSystem retrieval.
+     * @property {string|object} status Status of the file system retrieval.
      */
     status     : false,
     /**
-     * @property {string} tempFile A file name. The file will be created temporarily to obtain the fileSystem path.
+     * @property {string} tempFile A file name. The file will be created temporarily to obtain the file system path.
      */
     tempFile   : '_magnet_temp.txt',
     /**
-     * Request an instance of a Phonegap LocalFileSystem object. Updates the FileManager properties fileSystem,
-     * filePath, and status after completion.
+     * Request an instance of a Phonegap LocalFileSystem object. Updates these FileManager properties after completion: fileSystem, filePath, and status.
      * @param {function} callback Executes if the fileSystem object is retrieved successfully.
      * @param {function} failback Executes if an error occurs during fileSystem object retrieval.
      */
@@ -2366,7 +3152,7 @@ MagnetJS.FileManager = {
                     create    : true,
                     exclusive : false
                 }, function(fileEntry){
-                    me.filePath = fileEntry.fullPath.replace(me.tempFile, '');
+                    me.filePath = fileEntry.toURL ? fileEntry.toURL().replace(me.tempFile, '') : fileEntry.fullPath.replace(me.tempFile, '');
                     fileEntry.remove();
                     me.status = 'OK';
                     callback(me.fileSystem, me.filePath);
@@ -2386,7 +3172,7 @@ MagnetJS.FileManager = {
         }
     },
     /**
-     * Save a file to the file system and return a fileEntry object upon completion.
+     * Save a file to the file system, and return a fileEntry object upon completion.
      * @param {string} filename Filename of the file to be created.
      * @param {*} data The file data.
      * @param {function} callback Executes if the file is created successfully.
